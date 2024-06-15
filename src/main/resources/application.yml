@@ -1,0 +1,75 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+spring:
+  profiles:
+    active: dev
+  devtools:
+    add-properties: false
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    check-template-location: false
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/clothingshop?useSSL=false&serverTimezone=UTC
+    username: root
+    password:
+  jpa:
+    show_sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        ddl-auto: create
+    open-in-view: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ngothinh123147@gmail.com
+    password: znvc fynv qjcy dnjc
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: "443787686446-mp2mu51kouhr7ujdbvmufrrcjbtgqn79.apps.googleusercontent.com"
+            client-secret: "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"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: Google
+            scope: profile,email, openid
+        provider:
+          google:
+            authorization-uri: "https://accounts.google.com/o/oauth2/auth"
+            token-uri: "https://oauth2.googleapis.com/token"
+            user-info-uri: "https://www.googleapis.com/oauth2/v3/"
+            user-name-attribute: sub
+
+application:
+  security:
+    jwt:
+      secret: "1304ef1f9849a4da3110b4e92bda23f9778fddf3e52d1d606ebbb8d3c1b16c8"
+      expiration-token: 1
+      expiration-refresh-token: 720
+  client:
+    href: "http://localhost:5173"
+    verification_expired: 5
+
+  
+  #spring oauth2 client configuration
+  
+  #spring oauth2 resourceserver configuration
+  #spring.security.oauth2.resourceserver.jwt.issuer-uri=https://accounts.google.com
+  #spring.security.oauth2.resourceserver.jwt.jwk-set-uri=https://www.googleapis.com/oauth2/v3/certs
+
+
