@@ -1,12 +1,12 @@
 package com.stu.dissertation.clothingshop.DAO.RefreshToken;
 
-import com.stu.dissertation.clothingshop.DAO.NguoiDung.NguoiDungDAO;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.RefreshToken;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.RefreshTokenRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +24,7 @@ public class RefreshTokenDAOImpl implements RefreshTokenDAO{
     }
 
     @Override
+    @Transactional
     public RefreshToken save(RefreshToken entity) {
         NguoiDung user = nguoiDungRepository.findByEmail(entity.getNguoiDung().getEmail())
                 .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
@@ -32,6 +33,7 @@ public class RefreshTokenDAOImpl implements RefreshTokenDAO{
     }
 
     @Override
+    @Transactional
     public RefreshToken update(RefreshToken entity) {
         RefreshToken refreshToken = refreshTokenRepository.findById(entity.getId())
                 .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_REFRESH_TOKEN));

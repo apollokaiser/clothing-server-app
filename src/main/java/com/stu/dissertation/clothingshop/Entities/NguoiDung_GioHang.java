@@ -24,6 +24,13 @@ public class NguoiDung_GioHang {
     @MapsId("maTrangPhuc")
     @JoinColumn(name = "ma_trang_phuc")
     TrangPhuc trangPhuc;
+
+    @ManyToOne
+    @MapsId("maKichThuoc")
+    @JoinColumn(name="ma_kich_thuoc")
+    private KichThuoc kichThuoc;
     @Column(name="so_luong", columnDefinition = "INT NOT NULL")
     private int soLuong;
+    @Column(name="is_full_outfit", columnDefinition = "TINYINT(1) NOT NULL")
+    private boolean toanPhan;
 }

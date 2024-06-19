@@ -1,11 +1,14 @@
 package com.stu.dissertation.clothingshop.DAO.UserTokenDAO;
 
+import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.UserToken;
+import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.UserTokenRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserTokenDAOImpl implements UserTokenDAO{
     private final UserTokenRepository userTokenRepository;
+    private final NguoiDungRepository nguoiDungRepository;
 
     @Override
     public  Optional<UserToken> findByToken(String token) {
@@ -21,7 +25,8 @@ public class UserTokenDAOImpl implements UserTokenDAO{
 
     @Override
     public boolean validatedToken(String token) {
-        int result = userTokenRepository.activateUserByToken(token);
+        Long validateAt = Instant.now().toEpochMilli();
+        int result = userTokenRepository.activateUserByToken(token, validateAt);
         return result == 1;
     }
 
@@ -36,8 +41,9 @@ public class UserTokenDAOImpl implements UserTokenDAO{
     }
 
     @Override
+    @Transactional
     public UserToken save(UserToken entity) {
-        return null;
+        return userTokenRepository.save(entity);
     }
 
     @Override

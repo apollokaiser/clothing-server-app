@@ -15,9 +15,9 @@ import lombok.*;
 public class RefreshToken extends BaseEntity {
     @Id
     private Long id;
-    @Column(name = "refresh_token", columnDefinition = "VARCHAR(50) NOT NULL")
+    @Column(name = "refresh_token", columnDefinition = "VARCHAR(100) NOT NULL")
     private String refreshToken;
-    @Column(name = "expires_at", columnDefinition = "TIMESTAMP NOT NULL")
+    @Column(name = "expires_at", columnDefinition = "BIGINT NOT NULL")
     private Long expiresAt;
     @OneToOne
     @MapsId

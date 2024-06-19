@@ -7,6 +7,15 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name="user_token")
+@NamedStoredProcedureQuery(
+        name = "PROC_activate_user_by_token",
+        procedureName = "PROC_activate_user_by_token",
+        parameters = {
+                @StoredProcedureParameter(mode = ParameterMode.IN, name = "user_token", type = String.class),
+                @StoredProcedureParameter(mode = ParameterMode.IN, name = "validate_at", type = Long.class),
+                @StoredProcedureParameter(mode = ParameterMode.OUT, name = "result", type = Integer.class)
+        }
+)
 @Getter
 @Setter
 @Builder

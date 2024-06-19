@@ -4,6 +4,7 @@ import com.stu.dissertation.clothingshop.DAO.RefreshToken.RefreshTokenDAO;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.RefreshToken;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RefreshTokenServiceImpl implements RefreshTokenService{
     private final RefreshTokenDAO refreshTokenDAO;
     @Value("${application.security.jwt.expiration-refresh-token}")
@@ -23,9 +25,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
     public RefreshToken createRefreshToken(NguoiDung user) {
         if (user == null) return null;
         String token = UUID.randomUUID().toString();
+        Long expiration  = Instant.now().plus(expirationRefresh, ChronoUnit.MINUTES).toEpochMilli();
+        token = token + "-" + expiration;
         return RefreshToken.builder()
                 .refreshToken(token)
-                .expiresAt(Instant.now().plus(expirationRefresh, ChronoUnit.DAYS).toEpochMilli())
+                .expiresAt(expiration)
                 .nguoiDung(user)
                 .build();
     }
@@ -37,7 +41,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
             RefreshToken token = createRefreshToken(user);
             save(token);
             return token;
-        } else if(new Date(refreshToken.getExpiresAt()).after(new Date())) {
+        } else if(new Date(refreshToken.getExpiresAt()).before(new Date())) {
             RefreshToken token = createRefreshToken(user);
             refreshToken.setRefreshToken(token.getRefreshToken());
             refreshToken.setExpiresAt(token.getExpiresAt());
@@ -54,7 +58,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
 
     @Override
     public void save(RefreshToken entity) {
-
+        refreshTokenDAO.save(entity);
     }
 
     @Override
@@ -64,7 +68,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
 
     @Override
     public Optional<RefreshToken> findByToken(String token) {
-        return Optional.empty();
+        return refreshTokenDAO.findByToken(token);
     }
 
     @Override

@@ -17,6 +17,7 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -36,16 +37,21 @@ public class JWTService {
                 .issuer("clothingshop.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(expiration, ChronoUnit.HOURS).toEpochMilli()))
+                        Instant.now().plus(expiration, ChronoUnit.SECONDS).toEpochMilli()))
                 .claim("name", user.getName())
-                .claim("scope", user.getAuthorities())
+                .claim("scope", getAuthorities(user))
+                .claim("uid", user.getId())
                 .build();
         Payload payload = new Payload(claims.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
         jwsObject.sign(new MACSigner(secretKey.getBytes()));
         return jwsObject.serialize();
     }
-
+    private String getAuthorities(NguoiDung user) {
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        user.getAuthorities().forEach(authority -> stringJoiner.add(authority.getAuthority()));
+        return stringJoiner.toString();
+    }
     public String extractEmail(String token) {
         return verifiedToken(token).getSubject();
     }
@@ -68,10 +74,10 @@ public class JWTService {
             throw new ApplicationException(BusinessErrorCode.INVALID_TOKEN);
         }
     }
-    public boolean isNonxpiredToken(String token){
+    public boolean isNonExpiredToken(String token){
         try {
             Date expireTime = verifiedToken(token).getExpirationTime();
-            if(expireTime.after(new Date())) {
+            if(expireTime.before(new Date())) {
                 return false;
             }
             return true;

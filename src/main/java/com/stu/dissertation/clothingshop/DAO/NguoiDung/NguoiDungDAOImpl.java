@@ -1,11 +1,14 @@
 package com.stu.dissertation.clothingshop.DAO.NguoiDung;
 
+import com.stu.dissertation.clothingshop.DTO.NguoiDungDetailDTO;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.Role;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Mapper.NguoiDungMapper;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.RoleRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -16,8 +19,10 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class NguoiDungDAOImpl implements NguoiDungDAO{
+
     private final NguoiDungRepository nguoiDungRepository;
     private final RoleRepository roleRepository;
+    private final NguoiDungMapper nguoiDungMapper;
     @Override
     public Optional<NguoiDung> findById(Long id) {
         return nguoiDungRepository.findById(id);
@@ -54,8 +59,11 @@ public class NguoiDungDAOImpl implements NguoiDungDAO{
     }
 
     @Override
-    public Optional<NguoiDung> findUserById(Long id) {
-        return Optional.empty();
+    @Transactional
+    public NguoiDungDetailDTO findUserById(Long id) {
+        NguoiDung nguoiDung = nguoiDungRepository.findById(id)
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+        return nguoiDungMapper.convert(nguoiDung);
     }
 
     @Override

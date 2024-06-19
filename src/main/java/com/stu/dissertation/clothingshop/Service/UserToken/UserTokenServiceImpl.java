@@ -11,6 +11,7 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -45,15 +46,18 @@ public class UserTokenServiceImpl implements UserTokenService{
             EmailTemplateEngine viewEngine = EmailTemplateEngine.ACTIVATION_ACCOUNT;
             String subject = "CONFIRM ACCOUNT";
             String verificationToken = UUID.randomUUID().toString();
-            emailService.sendActivationAccount(user_token.getNguoiDung().getEmail(),
-                    subject,verificationToken,viewEngine);
             UserToken entity = UserToken.builder()
                     .nguoiDung(user_token.getNguoiDung())
                     .token(verificationToken)
                     .expiresAt(Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).toEpochMilli())
                     .build();
             userTokenDAO.save(entity);
-            throw new ApplicationException(BusinessErrorCode.EXPIRED_TOKEN,"Token has expired ! Check new token in your mail");
+            emailService.sendActivationAccount(user_token.getNguoiDung().getEmail(),
+                    subject,verificationToken,viewEngine);
+            return ResponseMessage.builder()
+                    .status(HttpStatus.ACCEPTED)
+                    .message("Token has expired ! Check new token in your mail")
+                    .build();
         }
        boolean isActive =  userTokenDAO.validatedToken(token);
         if(!isActive){

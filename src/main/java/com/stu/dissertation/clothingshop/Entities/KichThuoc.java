@@ -22,4 +22,7 @@ public class KichThuoc extends BaseEntity{
    @ManyToMany(mappedBy = "kichThuocs")
    @JsonIgnore
     private Set<TrangPhuc> trangPhucs;
+   @OneToMany(mappedBy = "kichThuoc")
+    @JsonIgnore
+    private Set<NguoiDung_GioHang> gioHangs;
 }

@@ -15,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Role extends BaseEntity{
     @Id
-    @Column(name="vai_tro")
+    @Column(name="vai_tro", columnDefinition = "VARCHAR(20)")
     private String role;
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore

@@ -46,12 +46,10 @@ public class RegisterService {
         log.warn("email {}", request.getEmail());
 
         String encodePassword = passwordEncoder.encode(request.getPassword());
-        String maGiohang = Base64.getEncoder().encodeToString(request.getEmail().getBytes(StandardCharsets.UTF_8));
         //save user credentials
         NguoiDung nguoiDung = NguoiDung.builder()
                 .email(request.getEmail())
                 .matKhau(encodePassword)
-                .maGioHang(maGiohang)
                 .enabled(false)
                 .build();
         String verificationToken = UUID.randomUUID().toString();

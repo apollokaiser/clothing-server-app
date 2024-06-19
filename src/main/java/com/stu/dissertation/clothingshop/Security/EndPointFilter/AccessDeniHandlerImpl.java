@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Exception.ExceptionHandler.Security;
+package com.stu.dissertation.clothingshop.Security.EndPointFilter;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +20,11 @@ public class AccessDeniHandlerImpl implements AccessDeniedHandler {
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null)
+        if (auth != null){
+            log.warn("Header :" + request.getHeader("Authorization"));
+            log.warn("Authentication block access denied: " + auth.getAuthorities().toString());
             log.warn("User: {} attempted to access the protected URL: {}", auth.getName(), request.getRequestURI());
+        }
         response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
     }
 }

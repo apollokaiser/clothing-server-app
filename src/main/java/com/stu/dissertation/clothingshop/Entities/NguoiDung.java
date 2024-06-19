@@ -1,10 +1,7 @@
 package com.stu.dissertation.clothingshop.Entities;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,6 +17,8 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     @Id
@@ -34,14 +33,12 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     String matKhau;
     @Column(name="so_dien_thoai", columnDefinition = "VARCHAR(32)")
     String sdt;
-    @Column(name="ma_gio_hang", columnDefinition = "VARCHAR(100) NOT NULL UNIQUE")
-    String maGioHang;
-    @Column(name="enabled", columnDefinition = "BIT NOT NULL")
-    boolean enabled;
-    @Column(name="khachMoi", columnDefinition = "BIT NOT NULL")
-    boolean khachMoi;
-    @OneToOne(cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER,
+    @Column(name="enabled", columnDefinition = "TINYINT(1) NOT NULL")
+    Boolean enabled;
+    @Column(name="khachMoi", columnDefinition = "TINYINT(1) NOT NULL")
+    Boolean khachMoi;
+    @OneToOne(fetch = FetchType.EAGER,
+            cascade = CascadeType.MERGE,
             orphanRemoval = true,
             mappedBy = "nguoiDung"
     )
@@ -52,7 +49,7 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     Set<DiaChi> diaChis;
     @OneToMany(mappedBy = "nguoiDung", cascade = {CascadeType.PERSIST})
     Set<UserToken> userTokens;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name="user_role",
             joinColumns = @JoinColumn(name="ma_nguoi_dung", referencedColumnName = "ma_nguoi_dung"),
             inverseJoinColumns = @JoinColumn(name="vai_tro", referencedColumnName = "vai_tro")

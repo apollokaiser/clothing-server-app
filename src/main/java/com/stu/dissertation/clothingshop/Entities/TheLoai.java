@@ -39,6 +39,12 @@ public class TheLoai extends BaseEntity{
     @JsonManagedReference
     private List<TheLoai> children;
 
+    @ManyToMany
+    @JoinTable(name = "theloai_khuyenmai",
+        joinColumns = @JoinColumn(name = "maloai", referencedColumnName = "maloai"),
+        inverseJoinColumns = @JoinColumn(name = "ma_khuyen_mai", referencedColumnName = "ma_khuyen_mai")
+    )
+    private Set<KhuyenMai> khuyenMais;
     public TheLoai(TheLoai theLoai) {
         this.maLoai = theLoai.getMaLoai();
         this.tenLoai = theLoai.getTenLoai();

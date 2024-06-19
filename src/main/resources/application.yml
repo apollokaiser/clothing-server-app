@@ -59,8 +59,8 @@ application:
   security:
     jwt:
       secret: "1304ef1f9849a4da3110b4e92bda23f9778fddf3e52d1d606ebbb8d3c1b16c8"
-      expiration-token: 1
-      expiration-refresh-token: 720
+      expiration-token: 30
+      expiration-refresh-token: 5
   client:
     href: "http://localhost:5173"
     verification_expired: 5

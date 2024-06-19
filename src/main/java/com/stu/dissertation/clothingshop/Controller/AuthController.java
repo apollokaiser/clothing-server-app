@@ -7,6 +7,7 @@ import com.stu.dissertation.clothingshop.Service.NguoiDung.NguoiDungService;
 import com.stu.dissertation.clothingshop.Service.NguoiDung.RegisterService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
     private final RegisterService registerService;
     private final NguoiDungService nguoiDungService;
@@ -47,5 +49,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(@RequestBody String token){
         return null;
+    }
+    @GetMapping("/refresh")
+    public ResponseEntity<ResponseMessage> refreshToken(@RequestParam("token") String token) {
+        ResponseMessage response = nguoiDungService.refreshToken(token);
+        return new ResponseEntity<>(response, headers, OK);
     }
 }
