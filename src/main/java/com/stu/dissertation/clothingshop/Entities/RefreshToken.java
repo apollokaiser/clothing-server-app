@@ -14,7 +14,7 @@ import lombok.*;
                 columnList = "refresh_token"))
 public class RefreshToken extends BaseEntity {
     @Id
-    private Long id;
+    private String id;
     @Column(name = "refresh_token", columnDefinition = "VARCHAR(100) NOT NULL")
     private String refreshToken;
     @Column(name = "expires_at", columnDefinition = "BIGINT NOT NULL")

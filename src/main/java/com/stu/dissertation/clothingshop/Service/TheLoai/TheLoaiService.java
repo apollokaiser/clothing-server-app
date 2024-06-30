@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface TheLoaiService {
     ResponseMessage getTheLoai();
+    ResponseMessage getTheLoaiPromotion();
 //    List<TheLoai> buildHierarchy();
 }

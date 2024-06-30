@@ -7,5 +7,6 @@ import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import java.util.List;
 
 public interface GioHangService {
+    ResponseMessage getCarts(Long id);
     ResponseMessage updateCarts(UpDateCartRequest cart);
 }

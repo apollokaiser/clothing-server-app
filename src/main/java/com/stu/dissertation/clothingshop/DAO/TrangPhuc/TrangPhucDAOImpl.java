@@ -18,13 +18,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class TrangPhucDAOImpl implements TrangPhucDAO {
-    private final TrangPhucRepository repository;
+    private final TrangPhucRepository trangPhucRepository;
     private final TrangPhucMapper trangPhucMapper;
     private final TrangphucDetailMapper trangphucDetailMapper;
     @Override
     @Transactional
     public List<TrangPhucDTO> getTrangPhuc(Pageable pageable) {
-        List<TrangPhucDTO> trangPhucList = repository.findAll(pageable)
+        List<TrangPhucDTO> trangPhucList = trangPhucRepository.findAll(pageable)
                 .stream()
                 .filter(trangphuc-> trangphuc.getTrangPhucChinhs().isEmpty())
                 .map(trangPhucMapper::convert).toList();
@@ -34,31 +34,37 @@ public class TrangPhucDAOImpl implements TrangPhucDAO {
     @Override
     @Transactional
     public TrangPhucDetailDTO getTrangPhucDetails(String id) {
-        TrangPhuc trangPhuc = repository.findById(id).orElseThrow(
+        TrangPhuc trangPhuc = trangPhucRepository.findById(id).orElseThrow(
                 ()-> new RuntimeException("Trang phuc not found")
         );
         return trangphucDetailMapper.convert(trangPhuc);
-//        return repository.getTrangPhucDetails(id);
+//        return trangPhucRepository.getTrangPhucDetails(id);
+    }
+
+    @Override
+    public List<TrangPhucDetailDTO> getTrangPhucInCart(List<String> ids) {
+        List<TrangPhuc> trangPhucs = trangPhucRepository.getTrangPhucByIds(ids);
+        return trangPhucs.stream().map(trangphucDetailMapper::convertToCartItem).toList();
     }
 
     @Override
     public Optional<TrangPhuc> findById(String id) {
-        return repository.findById(id);
+        return trangPhucRepository.findById(id);
     }
 
     @Override
     public TrangPhuc save(TrangPhuc entity) {
-        return repository.save(entity);
+        return trangPhucRepository.save(entity);
     }
 
     @Override
     public TrangPhuc update(TrangPhuc entity) {
-        return repository.save(entity);
+        return trangPhucRepository.save(entity);
 
     }
 
     @Override
     public void delete(List<String> ids) {
-        repository.deleteAllById(ids);
+        trangPhucRepository.deleteAllById(ids);
     }
 }

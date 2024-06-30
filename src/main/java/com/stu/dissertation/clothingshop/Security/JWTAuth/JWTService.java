@@ -37,7 +37,7 @@ public class JWTService {
                 .issuer("clothingshop.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(expiration, ChronoUnit.SECONDS).toEpochMilli()))
+                        Instant.now().plus(expiration, ChronoUnit.MINUTES).toEpochMilli()))
                 .claim("name", user.getName())
                 .claim("scope", getAuthorities(user))
                 .claim("uid", user.getId())

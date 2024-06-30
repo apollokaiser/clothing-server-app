@@ -1,23 +1,30 @@
 package com.stu.dissertation.clothingshop.Controller;
 
 import com.stu.dissertation.clothingshop.Payload.Request.UpDateCartRequest;
+import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Service.GioHang.GioHangService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import static org.springframework.http.HttpStatus.OK;
 
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/cart")
+@RequestMapping("/gio-hang")
 public class GioHangController {
     private final GioHangService gioHangService;
-    @PostMapping("/update-carts")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateCart(UpDateCartRequest cart) {
+    private final HttpHeaders headers;
+    @PostMapping("/luu-gio-hang")
+    @ResponseStatus(OK)
+    public void updateCart(@RequestBody UpDateCartRequest cart) {
         gioHangService.updateCarts(cart);
+    }
+    @GetMapping("/danh-sach")
+    public ResponseEntity<ResponseMessage> getCart(@RequestParam("uid") Long id){
+        ResponseMessage response = gioHangService.getCarts(id);
+        return new ResponseEntity<>(response,headers,OK);
     }
 }

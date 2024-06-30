@@ -10,6 +10,7 @@ import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashSet;
@@ -23,8 +24,9 @@ public class NguoiDungDAOImpl implements NguoiDungDAO{
     private final NguoiDungRepository nguoiDungRepository;
     private final RoleRepository roleRepository;
     private final NguoiDungMapper nguoiDungMapper;
+    private final PasswordEncoder passwordEncoder;
     @Override
-    public Optional<NguoiDung> findById(Long id) {
+    public Optional<NguoiDung> findById(String id) {
         return nguoiDungRepository.findById(id);
     }
 
@@ -44,11 +46,12 @@ public class NguoiDungDAOImpl implements NguoiDungDAO{
     }
 
     @Override
-    public void delete(List<Long> ids) {
+    public void delete(List<String> ids) {
 
     }
 
     @Override
+    @Transactional
     public Optional<NguoiDung> findNguoiDungByEmail(String email) {
         return nguoiDungRepository.findByEmail(email);
     }
@@ -60,29 +63,25 @@ public class NguoiDungDAOImpl implements NguoiDungDAO{
 
     @Override
     @Transactional
-    public NguoiDungDetailDTO findUserById(Long id) {
+    public NguoiDungDetailDTO findUserById(String id) {
         NguoiDung nguoiDung = nguoiDungRepository.findById(id)
                 .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
         return nguoiDungMapper.convert(nguoiDung);
     }
 
     @Override
+    @Transactional
     public void resetPassword(String email, String newPassword) {
-
+     NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+             .orElseThrow(()->new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+     if(passwordEncoder.matches(newPassword, nguoiDung.getMatKhau()))
+         throw new ApplicationException(BusinessErrorCode.NO_CHANGE_APPLY, "Cannot set a same with old pasword");
+     nguoiDung.setMatKhau(passwordEncoder.encode(newPassword));
+     nguoiDungRepository.save(nguoiDung);
     }
 
     @Override
     public void changePassword(String email, String newPassword) {
 
     }
-
-//    @Override
-//    public Optional<NguoiDung> getUsersByRefreshToken(String token) {
-//        return Optional.empty();
-//    }
-//
-//    @Override
-//    public void saveRefreshToken(NguoiDung user, String refreshToken) {
-//
-//    }
 }

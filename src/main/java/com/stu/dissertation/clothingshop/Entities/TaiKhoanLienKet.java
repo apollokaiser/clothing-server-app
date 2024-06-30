@@ -14,13 +14,12 @@ import lombok.*;
 @AllArgsConstructor
 public class TaiKhoanLienKet extends BaseEntity {
     @Id
-    @Column(name="provider_id")
     private String id;
     @Enumerated(EnumType.STRING)
     @Column(name = "provider", columnDefinition = "CHAR(10) NOT NULL")
     private LoginType provider;
-    @ManyToOne
-    @JoinColumn(name = "ma_nguoi_dung",
-            referencedColumnName = "ma_nguoi_dung")
+    @OneToOne
+    @MapsId
+    @PrimaryKeyJoinColumn(name = "ma_nguoi_dung")
     private NguoiDung nguoiDung;
 }

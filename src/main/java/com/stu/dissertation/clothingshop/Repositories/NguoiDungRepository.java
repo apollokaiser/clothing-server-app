@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
-public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
+public interface NguoiDungRepository extends JpaRepository<NguoiDung, String> {
     @Query("SELECT ng FROM NguoiDung ng WHERE ng.email = ?1")
     Optional<NguoiDung> findByEmail(String email);
 }

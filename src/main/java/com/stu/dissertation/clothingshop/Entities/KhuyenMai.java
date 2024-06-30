@@ -17,7 +17,7 @@ import java.util.Set;
 public class KhuyenMai {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name ="ma_khuyen_mai")
+    @Column(name ="ma_khuyen_mai", columnDefinition = "BIGINT")
     private Long maKhuyenMai;
     @Column(name = "ngay_bat_dau", columnDefinition = "BIGINT NOT NULL")
     private Long ngayBatDau;
@@ -33,7 +33,9 @@ public class KhuyenMai {
     private Double phanTramGiam;
     @Column(name = "so_luong_toi_thieu", columnDefinition = "INT NOT NULL")
     private Integer soLuongToiThieu;
-    @Column(name = "giam_tien", columnDefinition = "DOUBLE")
+    @Column(name = "gia_tri_toi_thieu", columnDefinition = "DECIMAL(10,2)")
+    private Double giaTriToiThieu;
+    @Column(name = "giam_tien", columnDefinition = "DECIMAL(10,2)")
     private Double giamTien;
     @ManyToMany(mappedBy ="khuyenMais")
     @JsonIgnore

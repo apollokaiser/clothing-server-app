@@ -28,7 +28,8 @@ public class GlobalExceptionHandler {
                 .message(e.getMessage())
                 .handle();
         return new ResponseEntity<>(response,headers, OK);
-    }  @ExceptionHandler(RuntimeException.class)
+    }
+    @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResponseMessage> handleException(RuntimeException e){
         ResponseMessage response = ResponseMessage.errorBuilder()
                 .errorCode(BusinessErrorCode.INTERNAL_ERROR)

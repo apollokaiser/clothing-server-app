@@ -18,6 +18,8 @@ public enum BusinessErrorCode {
   INVALID_REFRESH_TOKEN(3003, "Refresh Token is invalid"),
   EXPIRED_REFRESH_TOKEN(3004, "Refresh Token is expired"),
   ACCESS_TOKEN_ERROR(3005, "Access Token Error"),
+  INVALID_PROMOTION_CODE(3006, "Invalid Code"),
+  EXPIRED_PROMOTION_CODE(3007, "Expired Code"),
   ERROR_MAIL(5001, "Can't send email"),
   NULL_POINTER_REQUEST_DATA(5002, "Request data might have been be null"),
   NOT_ALLOW_DATA_SOURCE(5003, "Cannot allowed data that was requested by another source"),

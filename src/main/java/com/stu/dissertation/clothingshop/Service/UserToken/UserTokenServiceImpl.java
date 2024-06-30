@@ -10,6 +10,7 @@ import com.stu.dissertation.clothingshop.Service.EmailService.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.net.SSLUtilBase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.OK;
@@ -31,9 +33,26 @@ public class UserTokenServiceImpl implements UserTokenService{
 
     @Value("${application.security.verification_expired}")
     private long verificationExpired;
-    @Override
-    public void saveUserToken(UserToken user_token) {
 
+    @Override
+    public UserToken findByToken(String token) {
+        UserToken userToken = userTokenDAO.findByToken(token)
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_TOKEN));
+        if(userToken.getExpiresAt() < Instant.now().toEpochMilli())
+            throw new ApplicationException(BusinessErrorCode.EXPIRED_TOKEN);
+        return userToken;
+    }
+
+    @Override
+    @Transactional
+    public UserToken saveUserToken(UserToken user_token) throws MessagingException {
+        user_token.setExpiresAt(Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).toEpochMilli());
+        String subject = "RESET PASSWORD";
+        EmailTemplateEngine emailTemplate = EmailTemplateEngine.RESET_PASSWORD;
+        emailService.sendResetPasswordCode(
+                user_token.getNguoiDung().getEmail(),
+                subject, user_token.getToken(), emailTemplate);
+        return userTokenDAO.save(user_token);
     }
 
     @Override
@@ -70,7 +89,8 @@ public class UserTokenServiceImpl implements UserTokenService{
     }
 
     @Override
-    public void validateResetPasswordToken(String email, String token) {
-
+    @Transactional
+    public void validateResetPasswordToken( String token) {
+        userTokenDAO.validateResetPasswordToken(token);
     }
 }

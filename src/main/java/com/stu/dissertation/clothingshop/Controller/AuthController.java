@@ -5,6 +5,7 @@ import com.stu.dissertation.clothingshop.Payload.Request.UserCredentialsRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Service.NguoiDung.NguoiDungService;
 import com.stu.dissertation.clothingshop.Service.NguoiDung.RegisterService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +39,15 @@ public class AuthController {
         ResponseMessage response = nguoiDungService.activateAccount(token);
         return new ResponseEntity<>(response, headers, OK);
     }
-    @GetMapping("reset-password")
-    public ResponseEntity<ResponseMessage> resetPassword(@RequestParam(value="email") String email){
-        return null;
+    @GetMapping("/reset-password")
+    public ResponseEntity<ResponseMessage> resetPassword(@RequestParam(value="email") String email) throws MessagingException {
+        ResponseMessage response = nguoiDungService.resetPassword(email);
+        return new ResponseEntity<>(response,headers, OK);
     }
     @PostMapping("/reset-password")
     public ResponseEntity<ResponseMessage> resetPassword(@RequestBody RePasswordRequest request){
-        return null;
+       ResponseMessage response = nguoiDungService.resetPassword(request);
+       return new ResponseEntity<>(response,headers,OK);
     }
     @PostMapping("/logout")
     public ResponseEntity<ResponseMessage> logout(@RequestBody String token){
@@ -54,5 +57,10 @@ public class AuthController {
     public ResponseEntity<ResponseMessage> refreshToken(@RequestParam("token") String token) {
         ResponseMessage response = nguoiDungService.refreshToken(token);
         return new ResponseEntity<>(response, headers, OK);
+    }
+    @GetMapping("/oauth2/login/auth/google")
+    public ResponseEntity<ResponseMessage> googleLogin(@RequestParam("code") String code) {
+        ResponseMessage response = nguoiDungService.loginWithGoogle(code);
+        return new ResponseEntity<>(response, headers,OK);
     }
 }

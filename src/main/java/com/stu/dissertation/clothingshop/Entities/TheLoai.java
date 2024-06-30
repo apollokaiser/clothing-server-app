@@ -32,11 +32,9 @@ public class TheLoai extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maloai_parent", referencedColumnName = "maloai")
-    @JsonBackReference
     private TheLoai parent;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
-    @JsonManagedReference
     private List<TheLoai> children;
 
     @ManyToMany
@@ -44,6 +42,7 @@ public class TheLoai extends BaseEntity{
         joinColumns = @JoinColumn(name = "maloai", referencedColumnName = "maloai"),
         inverseJoinColumns = @JoinColumn(name = "ma_khuyen_mai", referencedColumnName = "ma_khuyen_mai")
     )
+    @JsonIgnore
     private Set<KhuyenMai> khuyenMais;
     public TheLoai(TheLoai theLoai) {
         this.maLoai = theLoai.getMaLoai();

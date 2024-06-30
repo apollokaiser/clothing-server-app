@@ -42,12 +42,10 @@ public class RegisterService {
     public ResponseMessage register(UserCredentialsRequest request) {
         if(nguoiDungDAO.isExistUser(request.getEmail()))
             throw new ApplicationException(BusinessErrorCode.USER_ALREADY_EXIST);
-        log.warn("password {}", request.getPassword());
-        log.warn("email {}", request.getEmail());
-
         String encodePassword = passwordEncoder.encode(request.getPassword());
         //save user credentials
         NguoiDung nguoiDung = NguoiDung.builder()
+                .id(UUID.randomUUID().toString())
                 .email(request.getEmail())
                 .matKhau(encodePassword)
                 .enabled(false)

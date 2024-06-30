@@ -2,6 +2,8 @@ package com.stu.dissertation.clothingshop.DAO.UserTokenDAO;
 
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.UserToken;
+import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
+import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.UserTokenRepository;
 import jakarta.transaction.Transactional;
@@ -31,8 +33,11 @@ public class UserTokenDAOImpl implements UserTokenDAO{
     }
 
     @Override
-    public void validateResetPasswordToken(String email, String token) {
-
+    @Transactional
+    public void validateResetPasswordToken(String token) {
+    UserToken userToken = userTokenRepository.findByToken(token).
+            orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_TOKEN));
+    userToken.setValidateAt(Instant.now().toEpochMilli());
     }
 
     @Override

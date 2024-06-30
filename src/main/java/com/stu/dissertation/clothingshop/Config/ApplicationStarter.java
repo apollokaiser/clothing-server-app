@@ -44,7 +44,7 @@ public class ApplicationStarter {
             add(KichThuoc.builder().id("XXXXL").build());
             add(KichThuoc.builder().id("XXXXXL").build());
             add(KichThuoc.builder().id("XXXXXXL").build());
-    }}  ;
+    }};
     final Set<Role> roles = new HashSet<>(){{
        add(Role.builder().role("ROLE_ADMIN").build());
        add(Role.builder().role("ROLE_USER").build());

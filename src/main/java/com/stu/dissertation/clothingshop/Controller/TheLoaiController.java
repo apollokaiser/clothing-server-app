@@ -21,4 +21,9 @@ public class TheLoaiController {
         ResponseMessage response = theLoaiService.getTheLoai();
         return new ResponseEntity<>(response,headers,HttpStatus.OK);
     }
+    @GetMapping("/danh-sach-khuyen-mai-danh-muc")
+    public ResponseEntity<?> getDanhMucPromotion() {
+        ResponseMessage response = theLoaiService.getTheLoaiPromotion();
+        return new ResponseEntity<>(response,headers,HttpStatus.OK);
+    }
 }

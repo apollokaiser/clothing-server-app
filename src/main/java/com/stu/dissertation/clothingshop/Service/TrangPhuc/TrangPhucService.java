@@ -9,4 +9,5 @@ import java.util.List;
 public interface TrangPhucService {
     ResponseMessage getTrangPhuc(Pageable pageable);
     ResponseMessage getTrangPhucDetails(String id);
+    ResponseMessage getTrangPhucInCart(List<String> ids);
 }

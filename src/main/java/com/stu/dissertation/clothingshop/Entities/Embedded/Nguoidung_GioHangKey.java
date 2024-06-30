@@ -1,20 +1,20 @@
 package com.stu.dissertation.clothingshop.Entities.Embedded;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 
-@Embeddable
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Nguoidung_GioHangKey implements Serializable {
-    @Column(name = "ma_nguoi_dung")
-    Long maNguoiDung;
-    @Column(name = "ma_trang_phuc")
+    Long gioHangId;
+    String maNguoiDung;
     String maTrangPhuc;
-    @Column(name="ma_kich_thuoc")
-    String maKichThuoc;
 }

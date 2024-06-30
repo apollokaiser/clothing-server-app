@@ -25,7 +25,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
     public RefreshToken createRefreshToken(NguoiDung user) {
         if (user == null) return null;
         String token = UUID.randomUUID().toString();
-        Long expiration  = Instant.now().plus(expirationRefresh, ChronoUnit.MINUTES).toEpochMilli();
+        Long expiration  = Instant.now().plus(expirationRefresh, ChronoUnit.HOURS).toEpochMilli();
         token = token + "-" + expiration;
         return RefreshToken.builder()
                 .refreshToken(token)

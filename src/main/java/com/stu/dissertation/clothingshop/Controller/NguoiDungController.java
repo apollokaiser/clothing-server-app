@@ -20,7 +20,7 @@ public class NguoiDungController {
     private final NguoiDungService nguoiDungService;
     private final HttpHeaders headers;
     @GetMapping("/info")
-    public ResponseEntity<ResponseMessage> info(@RequestParam("uid") Long uid) {
+    public ResponseEntity<ResponseMessage> info(@RequestParam("uid") String uid) {
        ResponseMessage response = nguoiDungService.getUserInfo(uid);
         return new ResponseEntity<>(response, headers, OK);
     }

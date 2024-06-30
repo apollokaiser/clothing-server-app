@@ -53,7 +53,8 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINT = {
             "/auth/**",
             "/danh-muc/**",
-            "/trang-phuc/**"
+            "/trang-phuc/**",
+            "/khuyen-mai/**"
     };
     @NonFinal
     @Bean
@@ -64,6 +65,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(req ->
                         req.requestMatchers(PUBLIC_ENDPOINT).permitAll()
                                 .requestMatchers(HttpMethod.GET, "/user/info").hasRole("USER")
+                                .requestMatchers("/gio-hang/**").hasRole("USER")
+                                .requestMatchers("/thanh-toan/thanh-toan-khach-hang").hasRole("USER")
 //                                .anyRequest()
 //                                .authenticated()
                 )

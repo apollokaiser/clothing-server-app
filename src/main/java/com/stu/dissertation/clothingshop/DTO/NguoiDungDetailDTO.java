@@ -1,8 +1,6 @@
 package com.stu.dissertation.clothingshop.DTO;
 
 import com.stu.dissertation.clothingshop.Entities.DiaChi;
-import com.stu.dissertation.clothingshop.Entities.NguoiDung_GioHang;
-import com.stu.dissertation.clothingshop.Entities.TaiKhoanLienKet;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +13,6 @@ public class NguoiDungDetailDTO {
     private Boolean khachMoi;
     private String sdt;
     private Set<DiaChi> diaChis;
-    private Set<TaiKhoanDTO> taiKhoans;
-    private Set<NguoiDung_GioHang> gioHangs;
+    private TaiKhoanDTO taiKhoan;
+    private Integer gioHangs;
 }

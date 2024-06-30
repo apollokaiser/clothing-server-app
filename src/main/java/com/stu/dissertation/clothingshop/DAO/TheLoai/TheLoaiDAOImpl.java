@@ -1,50 +1,70 @@
 package com.stu.dissertation.clothingshop.DAO.TheLoai;
 
+import com.stu.dissertation.clothingshop.DTO.TheLoaiDTO;
+import com.stu.dissertation.clothingshop.DTO.TheLoaiPromotionDTO;
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Mapper.TheLoaiMapper;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-@Transactional
+@Slf4j
 public class TheLoaiDAOImpl implements TheLoaiDAO{
-    private final TheLoaiRepository repository;
+    private final TheLoaiRepository theLoaiRepository;
+    private final TheLoaiMapper theLoaiMapper;
 
     @Override
     @Transactional
-    public List<TheLoai> getTheLoais() {
-        return repository.getTheLoai();
+    public List<TheLoaiDTO> getTheLoais() {
+        List<TheLoai> theLoais = theLoaiRepository.findAll();
+        if(theLoais.isEmpty()) return null;
+        return theLoais.stream()
+                .filter(item->item.getParent()==null)
+                .map(theLoaiMapper::convert)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public List<TheLoaiPromotionDTO> getTheLoaiHasPromotions() {
+        List<TheLoai> theLoais = theLoaiRepository.getTheLoaiHasPromotions(Instant.now().getEpochSecond());
+        if(theLoais.isEmpty()) return null;
+        return theLoais.stream().map(theLoaiMapper::convertToGetPromotion).collect(Collectors.toList());
     }
 
     @Override
     public Optional<TheLoai> findById(Long id) {
-        return repository.findById(id);
+        return theLoaiRepository.findById(id);
     }
 
     @Override
     public TheLoai save(TheLoai entity) {
-        return repository.save(entity);
+        return theLoaiRepository.save(entity);
     }
 
     @Override
     public TheLoai update(TheLoai entity) {
-        TheLoai result = repository.findById(entity.getMaLoai())
+        TheLoai result = theLoaiRepository.findById(entity.getMaLoai())
                 //TODO: add business error code
                 .orElseThrow(()-> new ApplicationException(BusinessErrorCode.CONNECTION_FAILED));
         result.setTenLoai(entity.getTenLoai());
-        return repository.save(result);
-
+        return theLoaiRepository.save(result);
     }
 
     @Override
     public void delete(List<Long> ids) {
-        repository.deleteAllById(ids);
+        theLoaiRepository.deleteAllById(ids);
     }
 }

@@ -23,14 +23,16 @@ public class TrangPhuc extends BaseEntity {
     private String tenTrangPhuc;
     @Column(name="giatien",columnDefinition = "DECIMAL(10,2) NOT NULL")
     private BigDecimal giaTien;
-    @Column(name="discount",columnDefinition = "DECIMAL(10,2) NOT NULL" )
-    private BigDecimal discount;
     @Column(name="mota_trang_phuc")
     private String moTa;
     @Column(name="soluong")
     private int soLuong;
     @Column(name="tinhtrang", columnDefinition = "BIT")
     private boolean tinhTrang;
+    @Column(name = "ten_phan_loai", columnDefinition = "VARCHAR(255)")
+    private String tenPhanLoai;
+    @Column(name = "phoi_San", columnDefinition = "TINYINT(1)")
+    private boolean phoiSan;
     @ManyToOne
     @JoinColumn(
             name="maloai",
@@ -53,14 +55,13 @@ public class TrangPhuc extends BaseEntity {
     @ManyToMany(mappedBy = "trangPhucChinhs")
     private Set<TrangPhuc> phuKiens;
 
-    @ManyToMany
-    @JoinTable(name = "trangphuc_kichthuoc",
-                joinColumns = @JoinColumn(name="ma_trang_phuc", referencedColumnName = "ma_trang_phuc"),
-                inverseJoinColumns = @JoinColumn(name="ma_kich_thuoc", referencedColumnName = "ma_kich_thuoc")
-    )
-    private Set<KichThuoc> kichThuocs;
-
     @OneToMany(mappedBy = "trangPhuc")
     @JsonIgnore
     private Set<NguoiDung_GioHang> gioHangs;
+
+    @OneToMany(mappedBy = "trangPhuc")
+    private Set<KichThuoc_TrangPhuc> kichThuocTrangPhucs;
+
+    @OneToMany(mappedBy = "trangPhuc")
+    private Set<ChiTietDonThue> chiTietDonThues;
 }

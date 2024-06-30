@@ -19,10 +19,8 @@ public class KichThuoc extends BaseEntity{
    private String id;
     @Column(name="mo_ta", columnDefinition = "VARCHAR(100)")
    private String moTa;
-   @ManyToMany(mappedBy = "kichThuocs")
-   @JsonIgnore
-    private Set<TrangPhuc> trangPhucs;
+
    @OneToMany(mappedBy = "kichThuoc")
     @JsonIgnore
-    private Set<NguoiDung_GioHang> gioHangs;
+    private Set<KichThuoc_TrangPhuc> kichThuocTrangPhucs;
 }

@@ -22,9 +22,8 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="ma_nguoi_dung")
-    Long id;
+    @Column(name="ma_nguoi_dung", columnDefinition = "VARCHAR(255)")
+    String id;
     @Column(name="ten_nguoi_dung", columnDefinition = "VARCHAR(100)")
     String tenNguoiDung;
     @Column(name="email", columnDefinition = "VARCHAR(325) NOT NULL UNIQUE")
@@ -43,8 +42,10 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
             mappedBy = "nguoiDung"
     )
     private RefreshToken refreshToken;
-    @OneToMany(mappedBy="nguoiDung")
-    private Set<TaiKhoanLienKet> taiKhoans;
+    @OneToOne(cascade = CascadeType.MERGE,
+            orphanRemoval = true,
+            mappedBy = "nguoiDung")
+    private TaiKhoanLienKet taiKhoan;
     @OneToMany(mappedBy = "nguoiDung")
     Set<DiaChi> diaChis;
     @OneToMany(mappedBy = "nguoiDung", cascade = {CascadeType.PERSIST})
@@ -57,6 +58,8 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     Set<Role> roles;
     @OneToMany(mappedBy = "nguoiDung")
     Set<NguoiDung_GioHang> gioHangs;
+    @OneToMany(mappedBy = "nguoiDung")
+    Set<DonThue> donThues;
     @Override
     public String getName() {
         return this.tenNguoiDung;
