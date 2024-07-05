@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.stu.dissertation.clothingshop.Entities.Embedded.ChiTietDonThueKey;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,5 +42,6 @@ public class ChiTietDonThue{
     @Id
     @JoinColumn(name = "ma_don_thue",
             referencedColumnName = "ma_don_thue",foreignKey = @ForeignKey(name = "FK_ctdonthue_donthue"))
+    @JsonIgnore
     private DonThue donThue;
 }

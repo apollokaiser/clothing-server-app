@@ -63,13 +63,13 @@ public class JWTService {
             throw new ApplicationException(BusinessErrorCode.INVALID_TOKEN);
         }
     }
-    public Long extractRefreshTime(String token) {
+    public Long extractExpTime(String token) {
         try {
-            Long refreshTime = Long.valueOf(verifiedToken(token).getStringClaim("refresh_time"));
-            if(new Date(refreshTime).after(new Date())) {
+            Long exp = verifiedToken(token).getExpirationTime().getTime();
+            if(new Date(exp).after(new Date())) {
                 return null;
             }
-            return refreshTime;
+            return exp;
         }  catch (Exception e) {
             throw new ApplicationException(BusinessErrorCode.INVALID_TOKEN);
         }

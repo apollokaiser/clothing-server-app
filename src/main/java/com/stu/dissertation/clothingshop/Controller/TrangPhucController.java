@@ -39,4 +39,9 @@ public class TrangPhucController {
         ResponseMessage response = trangPhucService.getTrangPhucInCart(cartId.ids());
         return new ResponseEntity<>(response,headers, OK);
     }
+    @GetMapping("/tim-kiem")
+    public ResponseEntity<?> searchTrangPhuc(@RequestParam("keyword") String keyword){
+        ResponseMessage response = trangPhucService.searchTrangPhuc(keyword);
+        return new ResponseEntity<>(response,headers, OK);
+    }
 }

@@ -29,12 +29,11 @@ public class GioHangServiceImpl implements GioHangService {
 
     @Override
     @Transactional
-    public ResponseMessage getCarts(Long id) {
+    public ResponseMessage getCarts(String id) {
         Set<GioHangDTO> cartItems = gioHangDAO.getCart(id);
         if(cartItems == null) return ResponseMessage.builder().status(OK).message("No cart").build();
-        List<String> ids = cartItems.stream()
-                .map(GioHangDTO::getId).collect(Collectors.toList());
-       List<TrangPhucDetailDTO> cartDetails =  trangPhucDAO.getTrangPhucInCart(ids);
+       List<String> ids = cartItems.stream().map(GioHangDTO::getId).collect(Collectors.toList());
+        List<TrangPhucDetailDTO> cartDetails =  trangPhucDAO.getTrangPhucInCart(ids);
         return ResponseMessage.builder()
                .status(OK)
                .message("Get carts successfully")

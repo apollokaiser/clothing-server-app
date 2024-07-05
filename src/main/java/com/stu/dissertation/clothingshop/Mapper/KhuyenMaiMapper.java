@@ -11,4 +11,5 @@ public interface KhuyenMaiMapper {
     KhuyenMaiMapper INSTANCE = Mappers.getMapper(KhuyenMaiMapper.class);
     KhuyenMaiDTO convert(KhuyenMai khuyenMai);
     KhuyenMaiThanhToanDTO convertToPromotionPayment(KhuyenMai khuyenMai);
+    KhuyenMai convert(KhuyenMaiDTO khuyenMai);
 }

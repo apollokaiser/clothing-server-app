@@ -27,8 +27,9 @@ public class KhuyenMaiDAOImpl implements KhuyenMaiDAO{
     }
 
     @Override
+    @Transactional
     public KhuyenMai save(KhuyenMai entity) {
-        return null;
+        return khuyenMaiRepository.save(entity);
     }
 
     @Override

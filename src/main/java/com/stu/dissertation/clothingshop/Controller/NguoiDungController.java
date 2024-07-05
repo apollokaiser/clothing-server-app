@@ -1,15 +1,21 @@
 package com.stu.dissertation.clothingshop.Controller;
 
+import com.stu.dissertation.clothingshop.Payload.Request.AddressRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.RePasswordRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.UpdateAddressRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.UpdateUserRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
+import com.stu.dissertation.clothingshop.Service.DonThue.DonThueService;
 import com.stu.dissertation.clothingshop.Service.NguoiDung.NguoiDungService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -18,10 +24,46 @@ import static org.springframework.http.HttpStatus.OK;
 public class NguoiDungController {
 
     private final NguoiDungService nguoiDungService;
+    private final DonThueService donThueService;
     private final HttpHeaders headers;
     @GetMapping("/info")
     public ResponseEntity<ResponseMessage> info(@RequestParam("uid") String uid) {
        ResponseMessage response = nguoiDungService.getUserInfo(uid);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @PostMapping("/change-password")
+    public ResponseEntity<ResponseMessage> changePassword(@RequestBody RePasswordRequest request) {
+        ResponseMessage response = nguoiDungService.changePassword(request);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @PostMapping("change-info")
+    public ResponseEntity<ResponseMessage> changeInfo(@RequestBody UpdateUserRequest update, HttpServletRequest request) {
+        ResponseMessage response = nguoiDungService.changeInfo(update, request);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @PostMapping("add-address")
+    public ResponseEntity<ResponseMessage> addAddress(@RequestBody AddressRequest address) {
+        ResponseMessage response = nguoiDungService.addAddress(address);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @DeleteMapping("/delete-address")
+    public ResponseEntity<ResponseMessage> deleteAddress(@RequestParam("id") Long id) {
+        ResponseMessage response = nguoiDungService.deleteAddress(id);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @PostMapping("update-address")
+    public ResponseEntity<ResponseMessage> updateAddress(@RequestBody AddressRequest address, boolean upddateDefault) {
+        ResponseMessage response = nguoiDungService.updateAddress(address, upddateDefault);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @PutMapping("/set-default-address")
+    public ResponseEntity<ResponseMessage> setDefaultAddress(Long id, boolean setDefault) {
+        ResponseMessage response = nguoiDungService.updateAdress(id, setDefault);
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @GetMapping("/get-orders")
+    public ResponseEntity<ResponseMessage> getOrders(@RequestParam("uid") String uid) {
+        ResponseMessage response = donThueService.getOrder(uid);
         return new ResponseEntity<>(response, headers, OK);
     }
 }

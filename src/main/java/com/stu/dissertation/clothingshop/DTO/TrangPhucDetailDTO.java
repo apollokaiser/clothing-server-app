@@ -12,6 +12,7 @@ public class TrangPhucDetailDTO {
     private String id;
     private String tenTrangPhuc;
     private BigDecimal giaTien;
+    private BigDecimal giaTronBo;
     private String moTa;
     private int soLuong;
     private boolean tinhTrang;

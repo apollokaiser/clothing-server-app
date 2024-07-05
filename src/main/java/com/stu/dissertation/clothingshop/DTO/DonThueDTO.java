@@ -19,11 +19,13 @@ public class DonThueDTO {
     private String diaChiNguoiNhan;
     private String ghiChu;
     private Date ngayNhan;
+    private Date ngayThue = new Date();
     private BigDecimal tamTinh;
     private BigDecimal tongUuDai;
     private BigDecimal tongThue;
-    private Long nguoiDung;
+    private String nguoiDung;
     private String phieuKhuyenMai;
     private String payment;
     private List<ChiTietDonThueDTO> chiTiet;
+    private TrangThai trangThai = null;
 }

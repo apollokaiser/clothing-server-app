@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpDateCartRequest {
-    Long maNguoiDung;
+    String maNguoiDung;
     String addCart;
     String deleteCart;
 }

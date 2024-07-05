@@ -50,8 +50,7 @@ public class DonThue extends BaseEntity{
             foreignKey = @ForeignKey(name = "FK_donthue_nguoidung"))
     private NguoiDung nguoiDung;
     @ManyToOne
-    @JoinColumn(name="ma_phieu", referencedColumnName = "ma_phieu"
-    )
+    @JoinColumn(name="ma_phieu", referencedColumnName = "ma_phieu", nullable = true)
     private PhieuKhuyenMai phieuKhuyenMai;
     @OneToMany(mappedBy = "donThue", cascade = CascadeType.ALL)
     private Set<ChiTietDonThue> chiTietDonThues;

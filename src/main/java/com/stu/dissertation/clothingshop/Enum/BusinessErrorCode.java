@@ -25,6 +25,8 @@ public enum BusinessErrorCode {
   NOT_ALLOW_DATA_SOURCE(5003, "Cannot allowed data that was requested by another source"),
   ROLE_NOT_AVAILABLE(5004, "Role not available"),
   INTERNAL_ERROR(5005, "Internal error"),
+  NOT_FOUND(5007, "Not found with your data"),
+  DATA_EXISTS(5008, "Data exists"),
   NULL_DATA(5006, "Null data");
   private int code;
   private String message;

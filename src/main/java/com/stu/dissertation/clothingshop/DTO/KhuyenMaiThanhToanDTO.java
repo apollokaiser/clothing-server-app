@@ -13,6 +13,7 @@ public class KhuyenMaiThanhToanDTO {
     private String moTa;
     private BigDecimal giamToiDa;
     private Double phanTramGiam;
+    private Double giamTien;
     private Integer soLuongToiThieu;
     private Double giaTriToiThieu;
 }

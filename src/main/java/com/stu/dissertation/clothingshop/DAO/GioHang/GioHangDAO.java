@@ -6,6 +6,6 @@ import com.stu.dissertation.clothingshop.Payload.Request.UpDateCartRequest;
 import java.util.Set;
 
 public interface GioHangDAO {
-    Set<GioHangDTO> getCart(Long id);
+    Set<GioHangDTO> getCart(String id);
     void updateCarts(UpDateCartRequest cart);
 }

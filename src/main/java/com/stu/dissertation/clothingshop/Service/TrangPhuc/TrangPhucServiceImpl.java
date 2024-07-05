@@ -1,6 +1,7 @@
 package com.stu.dissertation.clothingshop.Service.TrangPhuc;
 
 import com.stu.dissertation.clothingshop.DAO.TrangPhuc.TrangPhucDAO;
+import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDetailDTO;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import jakarta.transaction.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.http.HttpStatus.OK;
 
@@ -49,6 +51,19 @@ public class TrangPhucServiceImpl implements TrangPhucService{
                 .message("Get cart detail data successfully")
                 .data(new HashMap<>(){{
                     put("cart_details", trangPhucs);
+                }})
+                .build();
+    }
+
+    @Override
+    public ResponseMessage searchTrangPhuc(String keyword) {
+        String search = keyword.toLowerCase();
+        Set<TrangPhucDTO> trangPhucs = trangPhucDAO.searchTranPhuc(search);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Search successfully")
+                .data(new HashMap<>(){{
+                    put("trangphucs", trangPhucs);
                 }})
                 .build();
     }

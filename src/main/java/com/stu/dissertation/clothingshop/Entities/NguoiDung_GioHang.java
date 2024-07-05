@@ -11,7 +11,7 @@ import lombok.*;
         name = "PROC_add_cart",
         procedureName = "PROC_add_cart",
         parameters = {
-                @StoredProcedureParameter(mode = ParameterMode.IN, name = "ma_nguoi_dung", type = Long.class),
+                        @StoredProcedureParameter(mode = ParameterMode.IN, name = "ma_nguoi_dung", type = String.class),
                 @StoredProcedureParameter(mode = ParameterMode.IN, name = "add_list", type = String.class),
                 @StoredProcedureParameter(mode = ParameterMode.IN, name = "delete_list", type = String.class)
         }

@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.DAO.TrangPhuc;
 
+import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDetailDTO;
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
@@ -11,8 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -46,6 +51,13 @@ public class TrangPhucDAOImpl implements TrangPhucDAO {
         List<TrangPhuc> trangPhucs = trangPhucRepository.getTrangPhucByIds(ids);
         return trangPhucs.stream().map(trangphucDetailMapper::convertToCartItem).toList();
     }
+
+    @Override
+    public Set<TrangPhucDTO> searchTranPhuc(String search) {
+        Set<TrangPhuc> trangPhucs = trangPhucRepository.searchOutfit(search);
+        return trangPhucs.stream().map(trangPhucMapper::convert).collect(Collectors.toSet());
+    }
+
 
     @Override
     public Optional<TrangPhuc> findById(String id) {

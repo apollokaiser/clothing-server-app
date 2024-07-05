@@ -6,4 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface DonThueService {
     ResponseMessage saveOrder(OrderRequest order);
+    ResponseMessage getOrder(String uid);
+
+    ResponseMessage saveOrderWithoutAccount(OrderRequest orderDetail);
 }

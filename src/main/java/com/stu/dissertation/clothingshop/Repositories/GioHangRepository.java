@@ -14,9 +14,9 @@ import java.util.Set;
 public interface GioHangRepository
         extends JpaRepository<NguoiDung_GioHang, Nguoidung_GioHangKey> {
     @Query("SELECT ng FROM NguoiDung_GioHang ng WHERE ng.id.maNguoiDung =?1")
-    List<NguoiDung_GioHang> findByMaNguoiDung(Long maNguoiDung);
+    List<NguoiDung_GioHang> findByMaNguoiDung(String maNguoiDung);
     @Procedure(name = "PROC_add_cart")
-    void updateCart(@Param("ma_nguoi_dung") Long maNguoiDung,
+    void updateCart(@Param("ma_nguoi_dung") String maNguoiDung,
                     @Param("add_list") String addCart,
                     @Param("delete_list") String deleteCart);
 }

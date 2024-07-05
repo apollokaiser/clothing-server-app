@@ -23,7 +23,7 @@ public class GioHangController {
         gioHangService.updateCarts(cart);
     }
     @GetMapping("/danh-sach")
-    public ResponseEntity<ResponseMessage> getCart(@RequestParam("uid") Long id){
+    public ResponseEntity<ResponseMessage> getCart(@RequestParam("uid") String id){
         ResponseMessage response = gioHangService.getCarts(id);
         return new ResponseEntity<>(response,headers,OK);
     }

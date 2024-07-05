@@ -10,4 +10,5 @@ public interface TrangPhucService {
     ResponseMessage getTrangPhuc(Pageable pageable);
     ResponseMessage getTrangPhucDetails(String id);
     ResponseMessage getTrangPhucInCart(List<String> ids);
+    ResponseMessage searchTrangPhuc(String search);
 }

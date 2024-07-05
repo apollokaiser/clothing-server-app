@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -25,5 +26,12 @@ public class TheLoaiController {
     public ResponseEntity<?> getDanhMucPromotion() {
         ResponseMessage response = theLoaiService.getTheLoaiPromotion();
         return new ResponseEntity<>(response,headers,HttpStatus.OK);
+    }
+    @GetMapping("/danh-sach-trang-phuc")
+    public ResponseEntity<?> getTrangPhucByCategory(Long category,
+                                                    @RequestParam(value = "page",defaultValue = "0") int page,
+                                                    @RequestParam(value="size", defaultValue = "10") int size) {
+        ResponseMessage response = theLoaiService.getTrangPhucByCategory(category, page, size);
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 }

@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.stu.dissertation.clothingshop.Entities.DonThue;
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
 import jakarta.persistence.*;
@@ -18,4 +19,5 @@ public class ChiTietDonThueDTO {
     private long khuyenMai;
     private BigDecimal discount;
     private BigDecimal tongTien;
+    private TrangPhucPreviewDTO trangPhuc = null;
 }

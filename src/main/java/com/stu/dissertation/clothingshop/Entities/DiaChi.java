@@ -6,7 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Entity
-@Table
+@Table(name="dia_chi")
 @Getter
 @Setter
 @Builder
@@ -32,5 +32,11 @@ public class DiaChi extends BaseEntity{
     )
     @JsonIgnore
     private NguoiDung nguoiDung;
+    @OneToOne(mappedBy = "diaChi",
+    fetch = FetchType.EAGER,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private AddressDetail detail;
+
 
 }

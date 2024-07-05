@@ -9,11 +9,22 @@ import java.util.Set;
 
 @Entity
 @Table(name = "khuyen_mai")
+@NamedStoredProcedureQuery(
+        name = "PROC_add_promotion",
+        procedureName = "PROC_add_promotion",
+        parameters = {
+                @StoredProcedureParameter(mode = ParameterMode.IN, name = "promotion_id", type = Long.class),
+                @StoredProcedureParameter(mode = ParameterMode.IN, name = "category_id", type = Long.class),
+                @StoredProcedureParameter(mode = ParameterMode.IN, name = "this_time", type = Long.class),
+                @StoredProcedureParameter(mode = ParameterMode.OUT, name = "result", type = Integer.class)
+        }
+)
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+//	PROC_add_promotion
 public class KhuyenMai {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +38,8 @@ public class KhuyenMai {
     private String tenKhuyenMai;
     @Column(name = "mo_ta", columnDefinition = "TEXT NOT NULL")
     private String moTa;
+    @Column(name="noi_dung_chinh", columnDefinition = "TEXT NOT NULL")
+    private String noiDungChinh;
     @Column(name = "giam_toi_da", columnDefinition = "DECIMAL(10,2)")
     private BigDecimal giamToiDa;
     @Column(name = "phan_tram_giam", columnDefinition = "DOUBLE")

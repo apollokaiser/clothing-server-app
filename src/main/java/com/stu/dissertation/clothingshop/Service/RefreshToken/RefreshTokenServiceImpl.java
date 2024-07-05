@@ -1,8 +1,12 @@
 package com.stu.dissertation.clothingshop.Service.RefreshToken;
 
-import com.stu.dissertation.clothingshop.DAO.RefreshToken.RefreshTokenDAO;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.RefreshToken;
+import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
+import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
+import com.stu.dissertation.clothingshop.Repositories.RefreshTokenRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +20,9 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class RefreshTokenServiceImpl implements RefreshTokenService{
-    private final RefreshTokenDAO refreshTokenDAO;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final NguoiDungRepository nguoiDungRepository;
     @Value("${application.security.jwt.expiration-refresh-token}")
     private long expirationRefresh;
     @Override
@@ -35,44 +39,43 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
     }
 
     @Override
+    @Transactional
     public RefreshToken handle(NguoiDung user, RefreshToken refreshToken) {
         //the first time login
         if(refreshToken == null){
             RefreshToken token = createRefreshToken(user);
-            save(token);
-            return token;
+          return this.save(token);
         } else if(new Date(refreshToken.getExpiresAt()).before(new Date())) {
             RefreshToken token = createRefreshToken(user);
             refreshToken.setRefreshToken(token.getRefreshToken());
             refreshToken.setExpiresAt(token.getExpiresAt());
-            refreshTokenDAO.update(refreshToken);
+        return this.update(refreshToken);
         }
         return refreshToken;
 
     }
-
     @Override
-    public boolean checkRefreshToken(RefreshToken refreshToken) {
-        return false;
+    @Transactional
+    public RefreshToken save(RefreshToken entity) {
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(entity.getNguoiDung().getEmail())
+                        .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+        entity.setNguoiDung(nguoiDung);
+        return refreshTokenRepository.save(entity);
     }
 
     @Override
-    public void save(RefreshToken entity) {
-        refreshTokenDAO.save(entity);
-    }
-
-    @Override
-    public void delete(RefreshToken entity) {
-
-    }
-
-    @Override
+    @Transactional
     public Optional<RefreshToken> findByToken(String token) {
-        return refreshTokenDAO.findByToken(token);
+        return refreshTokenRepository.findByRefreshToken(token);
     }
 
     @Override
-    public void update(RefreshToken entity) {
-
+    @Transactional
+    public RefreshToken update(RefreshToken entity) {
+        RefreshToken refreshToken = refreshTokenRepository.findById(entity.getId())
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_REFRESH_TOKEN));
+        refreshToken.setRefreshToken(entity.getRefreshToken());
+        refreshToken.setExpiresAt(entity.getExpiresAt());
+        return refreshTokenRepository.save(refreshToken);
     }
 }

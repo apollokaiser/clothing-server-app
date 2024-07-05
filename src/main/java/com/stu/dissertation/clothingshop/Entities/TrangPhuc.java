@@ -23,6 +23,8 @@ public class TrangPhuc extends BaseEntity {
     private String tenTrangPhuc;
     @Column(name="giatien",columnDefinition = "DECIMAL(10,2) NOT NULL")
     private BigDecimal giaTien;
+    @Column(name="gia_tron_bo",columnDefinition = "DECIMAL(10,2)")
+    private BigDecimal giaTronBo;
     @Column(name="mota_trang_phuc")
     private String moTa;
     @Column(name="soluong")

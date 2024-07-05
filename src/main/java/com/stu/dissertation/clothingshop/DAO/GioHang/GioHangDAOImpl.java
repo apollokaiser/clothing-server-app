@@ -26,7 +26,7 @@ public class GioHangDAOImpl implements GioHangDAO{
 
     @Override
     @Transactional
-    public Set<GioHangDTO> getCart(Long id) {
+    public Set<GioHangDTO> getCart(String id) {
       List<NguoiDung_GioHang> gioHangs =  gioHangRepository.findByMaNguoiDung(id);
       if(gioHangs.isEmpty()) return null;
       return gioHangs.stream().map(gioHangMapper::convert).collect(Collectors.toSet());

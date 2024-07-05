@@ -25,4 +25,9 @@ public class DonThueController {
         ResponseMessage response = donThueService.saveOrder(orderDetail);
             return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+    @PostMapping(value="/thanh-toan-tien-loi")
+    public ResponseEntity<?> paymentWithInterest(@RequestBody @Valid OrderRequest orderDetail) {
+        ResponseMessage response = donThueService.saveOrderWithoutAccount(orderDetail);
+            return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
 }
