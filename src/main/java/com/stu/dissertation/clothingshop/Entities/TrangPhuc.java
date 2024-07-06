@@ -65,5 +65,6 @@ public class TrangPhuc extends BaseEntity {
     private Set<KichThuoc_TrangPhuc> kichThuocTrangPhucs;
 
     @OneToMany(mappedBy = "trangPhuc")
+    @JsonIgnore
     private Set<ChiTietDonThue> chiTietDonThues;
 }

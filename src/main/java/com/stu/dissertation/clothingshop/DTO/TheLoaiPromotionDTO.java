@@ -3,8 +3,6 @@ package com.stu.dissertation.clothingshop.DTO;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 public class TheLoaiPromotionDTO {

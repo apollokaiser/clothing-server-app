@@ -27,6 +27,11 @@ public class KhuyenMaiController {
         ResponseMessage response = khuyenMaiService.getKhuyenMaiThanhToan();
         return new ResponseEntity<>(response, headers, OK);
     }
+    @GetMapping("/danh-sach-khuyen-mai-danh-muc")
+    public  ResponseEntity<?> getPromotionCategory() {
+        ResponseMessage response = khuyenMaiService.getPromotionsCategory();
+        return new ResponseEntity<>(response, headers, OK);
+    }
     @GetMapping("/check-code")
     public ResponseEntity<?> checkPromotionCode(@RequestParam("code") String code) {
         ResponseMessage response = phieuKhuyenMaiService.checkPhieuKhuyenMai(code);

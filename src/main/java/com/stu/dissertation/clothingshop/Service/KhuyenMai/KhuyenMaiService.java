@@ -16,4 +16,5 @@ public interface KhuyenMaiService {
     ResponseMessage updatePromotion(AddpromotionRequest promotion);
 
     ResponseMessage getCategoryInPromotion(Long id);
+    ResponseMessage getPromotionsCategory();
 }

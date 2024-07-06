@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,4 +19,8 @@ public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai, Long> {
                       @Param("this_time") Long thisTime);
     @Query("SELECT km FROM KhuyenMai km WHERE km.tenKhuyenMai = ?1")
     Optional<KhuyenMai> findKhuyenMaiByTenKhuyenMai(String name);
+    @Query("SELECT km FROM KhuyenMai km WHERE km.ngayKetThuc > ?1 OR km.ngayKetThuc = 0")
+    List<KhuyenMai> getPromotionsNonExpired(long currentTime);
+    @Query("SELECT km FROM KhuyenMai km WHERE ?1 BETWEEN km.ngayBatDau AND km.ngayKetThuc")
+    List<KhuyenMai> getPromotionsCategory(long currentTime);
 }

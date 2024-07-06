@@ -92,6 +92,7 @@ public class DonThueServiceImpl implements DonThueService{
     }
 
     @Override
+    @Transactional
     public ResponseMessage saveOrderWithoutAccount(OrderRequest req) {
         DonThueDTO donThue = req.order();
         DonThue order = donThueMapper.convert(donThue);
@@ -105,7 +106,9 @@ public class DonThueServiceImpl implements DonThueService{
                 order.setPhieuKhuyenMai(phieuKhuyenMai);
             }
             List<TrangPhuc> listTrangPhuc = trangPhucRepository
-                    .getTrangPhucByIds(donThue.getChiTiet().stream().map(ChiTietDonThueDTO::getMaTrangPhuc).toList());
+                    .getTrangPhucByIds(donThue.getChiTiet()
+                    .stream().map(ChiTietDonThueDTO::getMaTrangPhuc)
+                    .toList());
             Set<ChiTietDonThue> chiTiet = donThue.getChiTiet().stream()
                     .map(detail -> {
                         ChiTietDonThue chiTietDonThue = chiTietDonThueMapper.convert(detail);
@@ -121,7 +124,6 @@ public class DonThueServiceImpl implements DonThueService{
             order.setPayment(PaymentMethod.valueOf(donThue.getPayment()));
             order.setNgayThue(Instant.now().getEpochSecond());
             donThueRepository.save(order);
-
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Order has been created successfully")

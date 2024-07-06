@@ -1,13 +1,11 @@
 package com.stu.dissertation.clothingshop.DAO.TheLoai;
 
 import com.stu.dissertation.clothingshop.DTO.TheLoaiDTO;
-import com.stu.dissertation.clothingshop.DTO.TheLoaiPromotionDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Mapper.TheLoaiMapper;
-import com.stu.dissertation.clothingshop.Mapper.TrangPhucMapper;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,7 +23,6 @@ import java.util.stream.Collectors;
 public class TheLoaiDAOImpl implements TheLoaiDAO{
     private final TheLoaiRepository theLoaiRepository;
     private final TheLoaiMapper theLoaiMapper;
-    private final TrangPhucMapper trangPhucMapper;
 
     @Override
     @Transactional
@@ -39,13 +35,13 @@ public class TheLoaiDAOImpl implements TheLoaiDAO{
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional
-    public List<TheLoaiPromotionDTO> getTheLoaiHasPromotions() {
-        List<TheLoai> theLoais = theLoaiRepository.getTheLoaiHasPromotions(Instant.now().getEpochSecond());
-        if(theLoais.isEmpty()) return null;
-        return theLoais.stream().map(theLoaiMapper::convertToGetPromotion).collect(Collectors.toList());
-    }
+//    @Override
+//    @Transactional
+//    public List<TheLoaiPromotionDTO> getTheLoaiHasPromotions() {
+//        List<TheLoai> theLoais = theLoaiRepository.getTheLoaiHasPromotions(Instant.now().getEpochSecond());
+//        if(theLoais.isEmpty()) return null;
+//        return theLoais.stream().map(theLoaiMapper::convertToGetPromotion).collect(Collectors.toList());
+//    }
 
     @Override
     public List<TrangPhucDTO> getTrangPhucByCategory(Long category, Pageable pageable) {

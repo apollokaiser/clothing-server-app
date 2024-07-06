@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TheLoaiService {
     ResponseMessage getTheLoai();
-    ResponseMessage getTheLoaiPromotion();
+//    ResponseMessage getTheLoaiPromotion();
     ResponseMessage getTrangPhucByCategory(Long category, int page, int size);
 //    List<TheLoai> buildHierarchy();
 }

@@ -60,7 +60,8 @@ public class SecurityConfig {
             "/khuyen-mai/danh-sach-khuyen-mai-thanh-toan",
             "/khuyen-mai/check-code",
             "/khuyen-mai/get-promotions",
-            "/thanh-toan/thanh-toan-tien-loi"
+            "/thanh-toan/thanh-toan-tien-loi",
+            "khuyen-mai/danh-sach-khuyen-mai-danh-muc"
     };
     @NonFinal
     @Bean

@@ -3,6 +3,7 @@ package com.stu.dissertation.clothingshop.Service.KhuyenMai;
 import com.stu.dissertation.clothingshop.DAO.KhuyenMai.KhuyenMaiDAO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiDTO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiThanhToanDTO;
+import com.stu.dissertation.clothingshop.DTO.KhuyenMaiTheLoaiDTO;
 import com.stu.dissertation.clothingshop.Entities.KhuyenMai;
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 
@@ -86,7 +88,8 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
 
     @Override
     public ResponseMessage getPromotionList() {
-        List<KhuyenMai> khuyenMais  = khuyenMaiRepository.findAll();
+        long currentTime = Instant.now().getEpochSecond();
+        List<KhuyenMai> khuyenMais  = khuyenMaiRepository.getPromotionsNonExpired(currentTime);
         List<KhuyenMaiDTO> khuyenMaisDTOs = khuyenMais.stream()
                 .map(khuyenMaiMapper::convert).toList();
      return ResponseMessage.builder()
@@ -142,6 +145,23 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
                 .data( new HashMap<>(){{
                      put("category_ids", categoryId);
                  }})
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage getPromotionsCategory() {
+        long currentTime = Instant.now().getEpochSecond();
+        List<KhuyenMai> khuyenMais = khuyenMaiRepository
+                .getPromotionsCategory(currentTime);
+        List<KhuyenMaiTheLoaiDTO> khuyenMaisDTOs = khuyenMais.stream()
+                .map(khuyenMaiMapper::convertPromtionCategory).toList();
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("get promotion categories successfully")
+                .data(new HashMap<>(){{
+                   put("theloai_promotions", khuyenMaisDTOs);
+                }})
                 .build();
     }
 

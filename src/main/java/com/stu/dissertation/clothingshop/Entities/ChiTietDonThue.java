@@ -36,12 +36,15 @@ public class ChiTietDonThue{
     @ManyToOne
     @Id
     @JoinColumn(name = "ma_trang_phuc",
-            referencedColumnName = "ma_trang_phuc", foreignKey = @ForeignKey(name="FK_ctdonthue_trangphuc"))
+            referencedColumnName = "ma_trang_phuc",
+            foreignKey = @ForeignKey(name="FK_ctdonthue_trangphuc"))
+    @JsonIgnore
     private TrangPhuc trangPhuc;
     @ManyToOne
     @Id
     @JoinColumn(name = "ma_don_thue",
-            referencedColumnName = "ma_don_thue",foreignKey = @ForeignKey(name = "FK_ctdonthue_donthue"))
+            referencedColumnName = "ma_don_thue",
+            foreignKey = @ForeignKey(name = "FK_ctdonthue_donthue"))
     @JsonIgnore
     private DonThue donThue;
 }
