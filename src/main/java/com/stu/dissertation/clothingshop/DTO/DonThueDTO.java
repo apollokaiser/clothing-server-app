@@ -28,4 +28,5 @@ public class DonThueDTO {
     private String payment;
     private List<ChiTietDonThueDTO> chiTiet;
     private TrangThai trangThai = null;
+    private DatCocDTO datCoc = null;
 }

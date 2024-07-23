@@ -57,4 +57,8 @@ public class DonThue extends BaseEntity{
     @OneToOne(mappedBy = "donThue")
     @JsonIgnore
     private PhieuHoanTra phieuTra;
+    @OneToOne(mappedBy="donThue", cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @JsonIgnore
+    private DatCoc datCoc;
 }

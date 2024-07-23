@@ -4,11 +4,9 @@ import com.stu.dissertation.clothingshop.Entities.UserToken;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import jakarta.mail.MessagingException;
 
-import java.util.Optional;
-
 public interface UserTokenService {
     UserToken findByToken(String token);
-    UserToken saveUserToken(UserToken user_token) throws MessagingException;
+    void saveUserToken(UserToken user_token) throws MessagingException;
     ResponseMessage validateUserToken(String token) throws MessagingException;
     void validateResetPasswordToken(String token);
 }

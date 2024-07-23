@@ -7,9 +7,11 @@ import com.stu.dissertation.clothingshop.Security.ClientInfo.GoogleClient;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.HttpClient.GoogleIdentityClient;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.HttpClient.GoogleUserClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
+@Lazy
 @RequiredArgsConstructor
 public class GoogleIdentityService {
     private final GoogleClient googleClient;

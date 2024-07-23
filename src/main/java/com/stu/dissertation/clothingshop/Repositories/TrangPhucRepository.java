@@ -1,6 +1,7 @@
 package com.stu.dissertation.clothingshop.Repositories;
 
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,5 +18,9 @@ public interface TrangPhucRepository extends JpaRepository<TrangPhuc, String> {
     @Query("SELECT tp FROM TrangPhuc tp JOIN tp.theLoai tl " +
             "WHERE LOWER(CONCAT(tp.tenTrangPhuc, ' ',tp.giaTien,' ', tp.moTa,' ',  tl.tenLoai, ' ', tl.slug)) " +
             "LIKE %?1%")
-    Set<TrangPhuc> searchOutfit(String search);
+    List<TrangPhuc> searchOutfit(String search, Pageable pageable);
+    @Query("SELECT tp FROM TrangPhuc tp ORDER BY tp.createAt DESC")
+    List<TrangPhuc> getLastestOutfit(Pageable pageable);
+    @Query("SELECT tp FROM TrangPhuc tp WHERE tp.theLoai.maLoai IN ?1")
+    List<TrangPhuc> getTrangPhucByCategory(List<Long> category, Pageable pageable);
 }

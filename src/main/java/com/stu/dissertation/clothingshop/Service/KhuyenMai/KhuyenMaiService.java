@@ -1,6 +1,5 @@
 package com.stu.dissertation.clothingshop.Service.KhuyenMai;
 
-import com.stu.dissertation.clothingshop.DTO.KhuyenMaiThanhToanDTO;
 import com.stu.dissertation.clothingshop.Payload.Request.AddpromotionRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 

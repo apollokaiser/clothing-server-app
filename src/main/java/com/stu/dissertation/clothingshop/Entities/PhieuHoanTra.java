@@ -16,7 +16,10 @@ public class PhieuHoanTra {
     @Id
     private String id;
     private Long ngayTra;
+    @Column(name="phu_thu", columnDefinition = "DECIMAL(10, 2)")
     private BigDecimal phuThu;
+    @Column(name="qua_han", columnDefinition = "INT")
+    private int quaHan;
     private BigDecimal tongTien;
     private String trangThai;
     @OneToOne

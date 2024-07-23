@@ -17,6 +17,8 @@ public class Role extends BaseEntity{
     @Id
     @Column(name="vai_tro", columnDefinition = "VARCHAR(20)")
     private String role;
+    @Column(name="priority", columnDefinition = "INT NOT NULL DEFAULT 0")
+    private Integer priority;
     @ManyToMany(mappedBy = "roles")
     @JsonIgnore
     private Set<NguoiDung> nguoiDungs;

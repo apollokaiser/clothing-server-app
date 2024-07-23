@@ -14,4 +14,11 @@ public interface EmailService {
             String subject,
             String resetPasswordCode,
             EmailTemplateEngine emailTemplateEngine) throws MessagingException;
+    void sendAdminInfo(
+            String to,
+            String subject,
+            String password,
+            String name,
+            String emailSuffix,
+            EmailTemplateEngine emailTemplateEngine) throws MessagingException;
 }

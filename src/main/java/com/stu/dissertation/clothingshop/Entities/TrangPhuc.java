@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Cascade;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -25,13 +26,13 @@ public class TrangPhuc extends BaseEntity {
     private BigDecimal giaTien;
     @Column(name="gia_tron_bo",columnDefinition = "DECIMAL(10,2)")
     private BigDecimal giaTronBo;
-    @Column(name="mota_trang_phuc")
+    @Column(name="mota_trang_phuc", columnDefinition = "TEXT")
     private String moTa;
-    @Column(name="soluong")
+    @Column(name="soluong", nullable = false)
     private int soLuong;
     @Column(name="tinhtrang", columnDefinition = "BIT")
     private boolean tinhTrang;
-    @Column(name = "ten_phan_loai", columnDefinition = "VARCHAR(255)")
+    @Column(name = "ten_phan_loai", unique = true, columnDefinition = "VARCHAR(255)")
     private String tenPhanLoai;
     @Column(name = "phoi_San", columnDefinition = "TINYINT(1)")
     private boolean phoiSan;
@@ -43,7 +44,7 @@ public class TrangPhuc extends BaseEntity {
     )
     @JsonIgnore
     private TheLoai theLoai;
-    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference
     private Set<HinhAnhTrangPhuc> hinhAnhs;
     @ManyToMany
@@ -57,11 +58,12 @@ public class TrangPhuc extends BaseEntity {
     @ManyToMany(mappedBy = "trangPhucChinhs")
     private Set<TrangPhuc> phuKiens;
 
-    @OneToMany(mappedBy = "trangPhuc")
+    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<NguoiDung_GioHang> gioHangs;
 
-    @OneToMany(mappedBy = "trangPhuc")
+    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
+    @Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
     private Set<KichThuoc_TrangPhuc> kichThuocTrangPhucs;
 
     @OneToMany(mappedBy = "trangPhuc")

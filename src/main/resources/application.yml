@@ -64,6 +64,9 @@ application:
       expiration-refresh-token: 1
   client:
     href: "http://localhost:5173"
+  admin:
+    email:
+      suffix: "@admin.anhduongstore.com"
 
   
   #spring oauth2 client configuration

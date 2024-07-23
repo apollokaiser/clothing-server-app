@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InvalidTokenService {
     private final InvalidTokenRepository invalidTokenRepository;
-    private final JWTService jwtSerrvice;
+    private final JWTService jwtService;
     public InvalidToken save(String token) {
-        Long exp = jwtSerrvice.extractExpTime(token);
+        Long exp = jwtService.extractExpTime(token);
         InvalidToken invalidToken = new InvalidToken(token, exp);
        return invalidTokenRepository.save(invalidToken);
     }
-    public boolean checkExists(String token) {
-        return invalidTokenRepository.findById(token).isPresent();
-    }
+//    public boolean checkExists(String token) {
+//        return invalidTokenRepository.findById(token).isPresent();
+//    }
 }

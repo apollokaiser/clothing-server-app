@@ -43,7 +43,6 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity(
         securedEnabled = true,
-        prePostEnabled = true,
         jsr250Enabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -56,7 +55,7 @@ public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINT = {
             "/auth/**",
             "/danh-muc/**",
-            "/trang-phuc/**",
+            "/trang-phuc/public/**",
             "/khuyen-mai/danh-sach-khuyen-mai-thanh-toan",
             "/khuyen-mai/check-code",
             "/khuyen-mai/get-promotions",
@@ -74,12 +73,10 @@ public class SecurityConfig {
                                 .requestMatchers( "/user/**").hasRole("USER")
                                 .requestMatchers("/gio-hang/**").hasRole("USER")
                                 .requestMatchers("/thanh-toan/thanh-toan-khach-hang").hasRole("USER")
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest()
                                 .authenticated()
-//                                .requestMatchers(HttpMethod.POST, "/khuyen-mai/save-promotion").hasRole("ADMIN")
-//                                .anyRequest()
-//                                .authenticated()
-                )
+                        )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                  .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -107,17 +104,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of( "http://localhost:5173","**", ""));
+        configuration.setAllowedOrigins(List.of( "http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-//    @Bean
-//    public AuthenticationManager authenticationManager(
-//            AuthenticationConfiguration config) throws Exception {
-//        return config.getAuthenticationManager();
-//    }
 }

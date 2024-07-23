@@ -7,9 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class RePasswordRequest {
-    private String email;
+    private String email = null;
     @NotBlank
     private String newPassword;
     private String oldPassword;
-    private String resetCode;
+    private String resetCode = null;
 }

@@ -1,8 +1,11 @@
 package com.stu.dissertation.clothingshop.Mapper;
 
 import com.stu.dissertation.clothingshop.DTO.ChiTietDonThueDTO;
+import com.stu.dissertation.clothingshop.DTO.DatCocDTO;
 import com.stu.dissertation.clothingshop.DTO.DonThueDTO;
+import com.stu.dissertation.clothingshop.DTO.DonThuePreviewDTO;
 import com.stu.dissertation.clothingshop.Entities.ChiTietDonThue;
+import com.stu.dissertation.clothingshop.Entities.DatCoc;
 import com.stu.dissertation.clothingshop.Entities.DonThue;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,7 +36,11 @@ public interface DonThueMapper {
     @Mapping(target = "ngayNhan", source = "ngayNhan", qualifiedByName = "getDate")
     @Mapping(target = "ngayThue", source = "ngayThue", qualifiedByName = "getDate")
     @Mapping(target = "chiTiet", source = "chiTietDonThues", qualifiedByName = "getChiTietThue")
+    @Mapping(target = "datCoc", source ="datCoc", qualifiedByName = "getDatCoc")
     DonThueDTO convert(DonThue donThue);
+
+    DonThuePreviewDTO convertPreview(DonThue donThue);
+
     @Named("getLongDate")
     default Long getLongDate(Date ngayNhan) {
         return ngayNhan.getTime()/1000;
@@ -46,6 +53,11 @@ public interface DonThueMapper {
     default List<ChiTietDonThueDTO> getChiTietThue(Set<ChiTietDonThue> chiTietDonThues) {
         return chiTietDonThues.stream().map(ChiTietDonThueMapper.INSTANCE::convert)
                 .collect(Collectors.toList());
+    }
+    @Named("getDatCoc")
+    default DatCocDTO getDatCoc(DatCoc datCoc) {
+        if(datCoc==null) return null;
+        return DatCocMapper.INSTANCE.convert(datCoc);
     }
 
 }

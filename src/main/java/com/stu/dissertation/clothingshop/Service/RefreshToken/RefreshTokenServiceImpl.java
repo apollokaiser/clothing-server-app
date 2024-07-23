@@ -8,7 +8,6 @@ import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Repositories.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -41,16 +40,20 @@ public class RefreshTokenServiceImpl implements RefreshTokenService{
     @Override
     @Transactional
     public RefreshToken handle(NguoiDung user, RefreshToken refreshToken) {
+        Long lastLogin = Instant.now().getEpochSecond();
         //the first time login
         if(refreshToken == null){
             RefreshToken token = createRefreshToken(user);
+            nguoiDungRepository.updatelastLogin(lastLogin, user.getEmail());
           return this.save(token);
         } else if(new Date(refreshToken.getExpiresAt()).before(new Date())) {
             RefreshToken token = createRefreshToken(user);
             refreshToken.setRefreshToken(token.getRefreshToken());
             refreshToken.setExpiresAt(token.getExpiresAt());
+        nguoiDungRepository.updatelastLogin(lastLogin, user.getEmail());
         return this.update(refreshToken);
         }
+        nguoiDungRepository.updatelastLogin(lastLogin, user.getEmail());
         return refreshToken;
 
     }

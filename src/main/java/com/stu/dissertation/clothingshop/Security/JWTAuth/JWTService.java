@@ -30,7 +30,7 @@ public class JWTService {
     private final InvalidTokenRepository invalidatedTokenRepository;
 
     public String generateToken(NguoiDung user) throws JOSEException {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .jwtID(UUID.randomUUID().toString())
                 .subject(user.getEmail())
@@ -55,17 +55,9 @@ public class JWTService {
     public String extractEmail(String token) {
         return verifiedToken(token).getSubject();
     }
-    public String extractName(String token) {
-        try {
-            String name = verifiedToken(token).getStringClaim("name");
-            return name;
-        } catch (ParseException e) {
-            throw new ApplicationException(BusinessErrorCode.INVALID_TOKEN);
-        }
-    }
     public Long extractExpTime(String token) {
         try {
-            Long exp = verifiedToken(token).getExpirationTime().getTime();
+            long exp = verifiedToken(token).getExpirationTime().getTime();
             if(new Date(exp).after(new Date())) {
                 return null;
             }
@@ -77,10 +69,7 @@ public class JWTService {
     public boolean isNonExpiredToken(String token){
         try {
             Date expireTime = verifiedToken(token).getExpirationTime();
-            if(expireTime.before(new Date())) {
-                return false;
-            }
-            return true;
+            return !expireTime.before(new Date());
         }  catch (Exception e) {
             throw new ApplicationException(BusinessErrorCode.INVALID_TOKEN);
         }
@@ -91,6 +80,7 @@ public class JWTService {
             JWSVerifier verifier = new MACVerifier(secretKey.getBytes());
             SignedJWT signedJWT = SignedJWT.parse(token);
             var verified = signedJWT.verify(verifier);
+
             if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
                 throw new ApplicationException(BusinessErrorCode.TOKEN_HAS_DESTROYED);
             return signedJWT.getJWTClaimsSet();

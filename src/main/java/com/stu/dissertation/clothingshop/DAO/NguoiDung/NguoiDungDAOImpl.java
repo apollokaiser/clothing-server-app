@@ -22,14 +22,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class NguoiDungDAOImpl implements NguoiDungDAO{
-
     private final NguoiDungRepository nguoiDungRepository;
     private final RoleRepository roleRepository;
     private final NguoiDungMapper nguoiDungMapper;
     private final PasswordEncoder passwordEncoder;
-    private final DiaChiRepository diaChiRepository;
     @Override
     public Optional<NguoiDung> findById(String id) {
         return nguoiDungRepository.findById(id);
@@ -44,17 +42,6 @@ public class NguoiDungDAOImpl implements NguoiDungDAO{
         entity.setRoles(new HashSet<>(){{add(role);}});
         return nguoiDungRepository.save(entity);
     }
-
-    @Override
-    public NguoiDung update(NguoiDung entity) {
-        return null;
-    }
-
-    @Override
-    @NotUse
-    public void delete(List<String> ids) {
-    }
-
     @Override
     @Transactional
     public Optional<NguoiDung> findNguoiDungByEmail(String email) {

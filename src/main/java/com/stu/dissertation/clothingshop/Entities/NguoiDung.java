@@ -26,7 +26,7 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     String id;
     @Column(name="ten_nguoi_dung", columnDefinition = "VARCHAR(100)")
     String tenNguoiDung;
-    @Column(name="email", columnDefinition = "VARCHAR(325) NOT NULL UNIQUE")
+    @Column(name="email", unique = true, columnDefinition = "VARCHAR(325) NOT NULL")
     String email;
     @Column(name="mat_khau", columnDefinition = "VARCHAR(100)")
     String matKhau;
@@ -36,19 +36,23 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
     Boolean enabled;
     @Column(name="khachMoi", columnDefinition = "TINYINT(1) NOT NULL")
     Boolean khachMoi;
+    @Column(name="last_login", columnDefinition = "BIGINT")
+    Long lastLogin;
+    @Column(name="email_admin", unique = true, columnDefinition = "VARCHAR(325)")
+    String adminEmail;
     @OneToOne(fetch = FetchType.EAGER,
             cascade = CascadeType.MERGE,
             orphanRemoval = true,
             mappedBy = "nguoiDung"
     )
-    private RefreshToken refreshToken;
+     RefreshToken refreshToken;
     @OneToOne(cascade = CascadeType.MERGE,
             orphanRemoval = true,
             mappedBy = "nguoiDung")
-    private TaiKhoanLienKet taiKhoan;
-    @OneToMany(mappedBy = "nguoiDung")
+     TaiKhoanLienKet taiKhoan;
+    @OneToMany(mappedBy = "nguoiDung", orphanRemoval = true, cascade = CascadeType.ALL)
     Set<DiaChi> diaChis;
-    @OneToMany(mappedBy = "nguoiDung", cascade = {CascadeType.PERSIST})
+    @OneToMany(mappedBy = "nguoiDung", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<UserToken> userTokens;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name="user_role",
@@ -56,7 +60,7 @@ public class NguoiDung extends BaseEntity implements UserDetails, Principal {
             inverseJoinColumns = @JoinColumn(name="vai_tro", referencedColumnName = "vai_tro")
     )
     Set<Role> roles;
-    @OneToMany(mappedBy = "nguoiDung")
+    @OneToMany(mappedBy = "nguoiDung",orphanRemoval = true)
     Set<NguoiDung_GioHang> gioHangs;
     @OneToMany(mappedBy = "nguoiDung")
     Set<DonThue> donThues;

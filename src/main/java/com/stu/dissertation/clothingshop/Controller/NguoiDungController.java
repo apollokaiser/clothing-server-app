@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,8 +51,8 @@ public class NguoiDungController {
         return new ResponseEntity<>(response, headers, OK);
     }
     @PostMapping("update-address")
-    public ResponseEntity<ResponseMessage> updateAddress(@RequestBody AddressRequest address, boolean upddateDefault) {
-        ResponseMessage response = nguoiDungService.updateAddress(address, upddateDefault);
+    public ResponseEntity<ResponseMessage> updateAddress(@RequestBody UpdateAddressRequest request) {
+        ResponseMessage response = nguoiDungService.updateAddress(request.address(),request.updateDefault());
         return new ResponseEntity<>(response, headers, OK);
     }
     @PutMapping("/set-default-address")

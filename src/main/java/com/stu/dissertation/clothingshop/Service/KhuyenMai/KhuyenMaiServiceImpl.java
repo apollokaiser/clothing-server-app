@@ -1,6 +1,5 @@
 package com.stu.dissertation.clothingshop.Service.KhuyenMai;
 
-import com.stu.dissertation.clothingshop.DAO.KhuyenMai.KhuyenMaiDAO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiDTO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiThanhToanDTO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiTheLoaiDTO;
@@ -15,26 +14,30 @@ import com.stu.dissertation.clothingshop.Repositories.KhuyenMaiRepository;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.OK;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class KhuyenMaiServiceImpl implements KhuyenMaiService{
-    private final KhuyenMaiDAO khuyenMaiDAO;
     private final KhuyenMaiMapper khuyenMaiMapper;
     private final KhuyenMaiRepository khuyenMaiRepository;
     private final TheLoaiRepository theLoaiRepository;
     @Override
     @Transactional
     public ResponseMessage getKhuyenMaiThanhToan() {
-        List<KhuyenMaiThanhToanDTO> khuyenMais = khuyenMaiDAO.getKhuyenMaisThanhToan();
+        Set<KhuyenMai> khuyenMaiThanhToan = khuyenMaiRepository.getUnGroupPromotions();
+        List<KhuyenMaiThanhToanDTO> khuyenMais = khuyenMaiThanhToan.stream()
+                .map(khuyenMaiMapper::convertToPromotionPayment).collect(Collectors.toList());
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get khuyen mai thannh toan successfully")
@@ -54,9 +57,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
         if(isPresent) throw new ApplicationException(BusinessErrorCode.DATA_EXISTS);
         KhuyenMai thisPromotion = khuyenMaiRepository.save(khuyenMai);
         Long thisTime = thisPromotion.getNgayBatDau();
-        promotion.ids().forEach(id->{
-            khuyenMaiRepository.addPromotion(thisPromotion.getMaKhuyenMai(), id, thisTime);
-        });
+        promotion.ids().forEach(id-> khuyenMaiRepository.addPromotion(thisPromotion.getMaKhuyenMai(), id, thisTime));
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Save promotion successfully")
@@ -76,9 +77,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
         List<Long> ids = khuyenMai.getTheLoais().stream().map(TheLoai::getMaLoai).toList();
         List<TheLoai> theLoais = theLoaiRepository.findAllById(ids);
         khuyenMaiRepository.delete(khuyenMai);
-        theLoais.forEach(theLoai -> {
-            theLoai.getKhuyenMais().remove(khuyenMai);
-        });
+        theLoais.forEach(theLoai -> theLoai.getKhuyenMais().remove(khuyenMai));
             theLoaiRepository.saveAllAndFlush(theLoais);
         return ResponseMessage.builder()
                 .status(OK)
@@ -121,9 +120,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
             updateField(entity, khuyenMai);
            KhuyenMai savedPromotion =  khuyenMaiRepository.save(entity);
             theLoaiRepository.saveAll(theLoais);
-            promotion.ids().forEach(id ->{
-                khuyenMaiRepository.addPromotion(savedPromotion.getMaKhuyenMai(), id, savedPromotion.getNgayBatDau());
-            });
+            promotion.ids().forEach(id -> khuyenMaiRepository.addPromotion(savedPromotion.getMaKhuyenMai(), id, savedPromotion.getNgayBatDau()));
         }
         updateField(entity, khuyenMai);
        khuyenMaiRepository.save(entity);

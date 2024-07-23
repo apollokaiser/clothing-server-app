@@ -28,7 +28,7 @@ public class TheLoaiController {
 //        return new ResponseEntity<>(response,headers,HttpStatus.OK);
 //    }
     @GetMapping("/danh-sach-trang-phuc")
-    public ResponseEntity<?> getTrangPhucByCategory(Long category,
+    public ResponseEntity<?> getTrangPhucByCategory( @RequestParam(value = "id") Long category,
                                                     @RequestParam(value = "page",defaultValue = "0") int page,
                                                     @RequestParam(value="size", defaultValue = "10") int size) {
         ResponseMessage response = theLoaiService.getTrangPhucByCategory(category, page, size);

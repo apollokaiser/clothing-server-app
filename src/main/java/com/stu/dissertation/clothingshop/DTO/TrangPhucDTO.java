@@ -14,13 +14,11 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 public class TrangPhucDTO {
-
     private String id;
-
     private String tenTrangPhuc;
-
     private BigDecimal giaTien;
-
     private List<String> hinhAnhs;
+    private int soLuong;
+    private int hasOrderCount;
 
 }

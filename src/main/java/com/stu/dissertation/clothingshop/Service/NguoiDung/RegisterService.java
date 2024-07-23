@@ -14,8 +14,8 @@ import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -28,8 +28,7 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.OK;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class RegisterService {
     private final NguoiDungRepository nguoiDungRepository;
     private final NguoiDungDAO nguoiDungDAO;
@@ -41,13 +40,15 @@ public class RegisterService {
 
     @Transactional
     public ResponseMessage register(UserCredentialsRequest request) {
+        // đã cập nhật tìm adminEmail
       Optional<NguoiDung> user =  nguoiDungRepository.findByEmail(request.getEmail());
       if(user.isPresent()) throw new ApplicationException(BusinessErrorCode.USER_ALREADY_EXIST);
-        String encodePassword = passwordEncoder.encode(request.getPassword());
+      String encodePassword = passwordEncoder.encode(request.getPassword());
         //save user credentials
         NguoiDung nguoiDung = NguoiDung.builder()
                 .id(UUID.randomUUID().toString())
                 .email(request.getEmail())
+                .tenNguoiDung(request.getName())
                 .matKhau(encodePassword)
                 .enabled(false)
                 .khachMoi(false)

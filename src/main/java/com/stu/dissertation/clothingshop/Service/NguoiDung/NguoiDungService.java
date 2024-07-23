@@ -22,7 +22,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,14 +31,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.OK;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class NguoiDungService {
     private final JWTService jwtService;
     private final NguoiDungDAO nguoiDungDAO;
@@ -59,6 +58,7 @@ public class NguoiDungService {
         }
     }
 
+    @Transactional
     public ResponseMessage loginWithAccount(UserCredentialsRequest request) {
         var auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -68,6 +68,8 @@ public class NguoiDungService {
         );
         NguoiDung user = (NguoiDung) auth.getPrincipal();
         RefreshToken refreshToken = refreshTokenService.handle(user, user.getRefreshToken());
+        Long authTime = Instant.now().getEpochSecond();
+        nguoiDungRepository.updatelastLogin(authTime, user.getEmail());
         try {
             String accessToken = jwtService.generateToken(user);
             return ResponseMessage.builder()
@@ -82,7 +84,7 @@ public class NguoiDungService {
             throw new ApplicationException(BusinessErrorCode.ACCESS_TOKEN_ERROR, "Error generating token");
         }
     }
-
+    @Transactional
     public ResponseMessage refreshToken(String token) {
         RefreshToken refresh_token = refreshTokenService.findByToken(token)
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INVALID_REFRESH_TOKEN));
@@ -154,6 +156,8 @@ public class NguoiDungService {
         } else {
             if (Objects.equals(nguoiDung.get().getId(), userInfo.id())) {
                 RefreshToken refreshToken = refreshTokenService.handle(nguoiDung.get(), nguoiDung.get().getRefreshToken());
+                Long authTime = Instant.now().getEpochSecond();
+                nguoiDungRepository.updatelastLogin(authTime, nguoiDung.get().getEmail());
                 try {
                     String accesstoken = jwtService.generateToken(nguoiDung.get());
                     return ResponseMessage.builder()
@@ -189,6 +193,7 @@ public class NguoiDungService {
                 .build();
         //liên kết người dùng và tài khoản
         userEntity.setTaiKhoan(taiKhoanLienKet);
+        userEntity.setLastLogin(Instant.now().getEpochSecond());
         //lưu người dùng và tài khoản
         NguoiDung nguoiDung = nguoiDungDAO.save(userEntity);
         //tạo refresh token
@@ -214,10 +219,7 @@ public class NguoiDungService {
     public ResponseMessage changePassword(RePasswordRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        if(!Objects.equals(email, request.getEmail())) {
-            throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
-        }
-        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(request.getEmail())
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
         if (!passwordEncoder.matches(request.getOldPassword(), nguoiDung.getMatKhau())) {
             throw new ApplicationException(BusinessErrorCode.WRONG_PASSWORD);
@@ -295,9 +297,6 @@ public class NguoiDungService {
      String email = auth.getName();
      NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
              .orElseThrow(()-> new ApplicationException((BusinessErrorCode.USER_NOT_FOUND)));
-     if(!Objects.equals(nguoiDung.getId(), address.uid())) {
-         throw new ApplicationException((BusinessErrorCode.NOT_ALLOW_DATA_SOURCE));
-     }
      DiaChi diaChi = DiaChi.builder()
              .nguoiDung(nguoiDung)
              .tenDiaChi(address.name())
@@ -332,21 +331,22 @@ public class NguoiDungService {
                 .build();
     }
 
+    @Transactional
     public ResponseMessage updateAddress(AddressRequest address, boolean updateDefault) {
         DiaChi diaChi = diaChiRepository.findById(address.id())
                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         diaChi.setTenDiaChi(address.name());
         diaChi.setDiaChi(address.address());
+        //có sự thay đổi về địa chỉ mặc định
         if(!diaChi.getIsDefault() && address.isDefault()) {
             diaChiRepository.resetDefaultAddress(diaChi.getNguoiDung().getId());
+        } if(diaChi.getIsDefault() && !address.isDefault()){
+            diaChi.setIsDefault(false);
         }
         if(!updateDefault){
-        AddressDetail detail = AddressDetail.builder()
-                .districtId(address.districtId())
-                .provinceId(address.provinceId())
-                .wardId(address.wardId())
-                .build();
-            diaChi.setDetail(detail);
+        diaChi.getDetail().setProvinceId(address.provinceId());
+        diaChi.getDetail().setDistrictId(address.districtId());
+        diaChi.getDetail().setWardId(address.wardId());
         }
         diaChiRepository.save(diaChi);
         return ResponseMessage.builder()

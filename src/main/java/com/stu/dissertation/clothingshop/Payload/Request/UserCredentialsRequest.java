@@ -12,10 +12,10 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserCredentialsRequest {
-    @Email(message = "Please enter your email address")
     private String email;
     @NotBlank(message = "Please enter your email address")
     @NotEmpty
     @NotNull
     private String password;
+    private String name = null;
 }
