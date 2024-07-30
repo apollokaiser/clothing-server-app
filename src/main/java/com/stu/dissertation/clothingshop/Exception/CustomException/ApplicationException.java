@@ -5,8 +5,8 @@ import lombok.Getter;
 
 @Getter
 public class ApplicationException extends RuntimeException {
-    private BusinessErrorCode errorCode;
-    private Class<?> errorClass;
+    private final BusinessErrorCode errorCode;
+    private final Class<?> errorClass;
     public ApplicationException(BusinessErrorCode errorCode, Class<?> errorClass){
         super(errorCode.getMessage());
         this.errorCode = errorCode;

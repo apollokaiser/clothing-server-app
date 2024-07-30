@@ -19,8 +19,12 @@ public interface TrangPhucRepository extends JpaRepository<TrangPhuc, String> {
             "WHERE LOWER(CONCAT(tp.tenTrangPhuc, ' ',tp.giaTien,' ', tp.moTa,' ',  tl.tenLoai, ' ', tl.slug)) " +
             "LIKE %?1%")
     List<TrangPhuc> searchOutfit(String search, Pageable pageable);
-    @Query("SELECT tp FROM TrangPhuc tp ORDER BY tp.createAt DESC")
+    @Query("SELECT tp FROM TrangPhuc tp " +
+            "WHERE tp.trangPhucChinh IS NULL " +
+            "ORDER BY tp.createAt DESC")
     List<TrangPhuc> getLastestOutfit(Pageable pageable);
-    @Query("SELECT tp FROM TrangPhuc tp WHERE tp.theLoai.maLoai IN ?1")
+    @Query("SELECT tp FROM TrangPhuc tp " +
+            "WHERE tp.theLoai.maLoai IN ?1 AND tp.trangPhucChinh IS NULL " +
+            "ORDER BY tp.createAt DESC")
     List<TrangPhuc> getTrangPhucByCategory(List<Long> category, Pageable pageable);
 }

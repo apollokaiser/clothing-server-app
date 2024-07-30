@@ -55,6 +55,9 @@ public class JWTService {
     public String extractEmail(String token) {
         return verifiedToken(token).getSubject();
     }
+    public String extractUID(String token) throws ParseException {
+        return verifiedToken(token).getStringClaim("uid");
+    }
     public Long extractExpTime(String token) {
         try {
             long exp = verifiedToken(token).getExpirationTime().getTime();

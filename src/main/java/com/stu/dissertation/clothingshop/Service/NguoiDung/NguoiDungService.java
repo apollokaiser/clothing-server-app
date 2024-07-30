@@ -265,33 +265,6 @@ public class NguoiDungService {
         }
     }
     @Transactional
-    private void addAddress(Set<AddressRequest> addresses, NguoiDung nguoiDung){
-        List<DiaChi> diaChis = new ArrayList<>();
-        for (AddressRequest addressRequest : addresses) {
-            DiaChi diaChi = DiaChi.builder()
-                    .tenDiaChi(addressRequest.name())
-                    .diaChi(addressRequest.address())
-                    .nguoiDung(nguoiDung)
-                    .build();
-            diaChis.add(diaChi);
-        }
-        diaChiRepository.saveAll(diaChis);
-    }
-    @Transactional
-    private void updateAddress(List<AddressRequest> addresses, NguoiDung nguoiDung, boolean updateDefault){
-        List<DiaChi> diaChis = new ArrayList<>();
-        for (AddressRequest addressRequest : addresses) {
-            DiaChi diaChi = DiaChi.builder()
-                    .tenDiaChi(addressRequest.name())
-                    .diaChi(addressRequest.address())
-                    .nguoiDung(nguoiDung)
-                    .build();
-            diaChis.add(diaChi);
-        }
-        diaChiRepository.saveAll(diaChis);
-    }
-    @Transactional
-
     public ResponseMessage addAddress(AddressRequest address) {
      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
      String email = auth.getName();

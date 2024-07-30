@@ -5,6 +5,8 @@ import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKe
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
+
 @Entity
 @Table(name="kichthuoc_trangphuc")
 @Getter
@@ -25,7 +27,12 @@ public class KichThuoc_TrangPhuc {
     @JoinColumn(name = "ma_kich_thuoc")
     @JsonIgnore
     private KichThuoc kichThuoc;
-
     @Column(name="so_luong")
-    private int soLuong;
+    private Integer soLuong;
+    @OneToMany(mappedBy="outfitSize")
+    @JsonIgnore
+    private Set<NguoiDung_GioHang> gioHangs;
+    @OneToMany(mappedBy="outfitSize")
+    @JsonIgnore
+    private Set<ChiTietDonThue> chiTietDons;
 }

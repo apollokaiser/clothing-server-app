@@ -24,8 +24,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-//	PROC_add_promotion
-public class KhuyenMai {
+public class KhuyenMai extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name ="ma_khuyen_mai", columnDefinition = "BIGINT")

@@ -24,7 +24,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        ddl-auto: create
+        ddl-auto: update
     open-in-view: false
   mail:
     host: smtp.gmail.com
@@ -67,6 +67,11 @@ application:
   admin:
     email:
       suffix: "@admin.anhduongstore.com"
+  redis:
+    time-to-live:
+      session: 30 #days
+      cart: 30 #days
+      categories: 30 #days
 
   
   #spring oauth2 client configuration

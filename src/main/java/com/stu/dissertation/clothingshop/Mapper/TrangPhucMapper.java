@@ -22,11 +22,11 @@ public interface TrangPhucMapper {
     TrangPhuc convert(TrangPhucDTO trangPhuc);
     @Mapping(target="id", ignore = true)
     @Mapping(target="theLoai", ignore = true)
-    @Mapping(target="trangPhucChinhs", ignore = true)
+    @Mapping(target="trangPhucChinh", ignore = true)
     @Mapping(target="chiTietDonThues", ignore = true)
     @Mapping(target="kichThuocTrangPhucs", ignore = true)
     @Mapping(target = "gioHangs", ignore = true)
-    @Mapping(target = "phuKiens", ignore = true)
+    @Mapping(target = "manhTrangPhucs", ignore = true)
     @Mapping(target = "hinhAnhs", source = "hinhAnhs", qualifiedByName = "setHinhAnhs")
     TrangPhuc convert(UpdateTrangPhucDTO trangPhuc);
 
@@ -35,28 +35,25 @@ public interface TrangPhucMapper {
     @Mapping(target="id", ignore = true)
     @Mapping(target = "theLoai", ignore = true)
     @Mapping(target = "hinhAnhs", ignore = true)
-    @Mapping(target = "trangPhucChinhs", ignore = true)
-    @Mapping(target = "phuKiens", ignore = true)
+    @Mapping(target = "trangPhucChinh", ignore = true)
+    @Mapping(target = "manhTrangPhucs", ignore = true)
     @Mapping(target = "gioHangs", ignore = true)
     @Mapping(target = "kichThuocTrangPhucs", ignore = true)
     @Mapping(target = "chiTietDonThues", ignore = true)
     void updateEntityFromDto(UpdateTrangPhucDTO trangPhucDTO, @MappingTarget TrangPhuc trangPhuc);
     @Named("hinhAnhsToString")
     default List<String> hinhAnhsToString(Set<HinhAnhTrangPhuc> hinhAnhs){
-        List<String> hinhs = hinhAnhs.stream().map(HinhAnhTrangPhuc::getHinhAnh).collect(Collectors.toList());
-        return hinhs;
+        return hinhAnhs.stream().map(HinhAnhTrangPhuc::getHinhAnh).collect(Collectors.toList());
     }
     @Named("StringToHinhAnhs")
     default Set<HinhAnhTrangPhuc> StringToHinhAnhs(List<String> hinhAnhs){
-        Set<HinhAnhTrangPhuc> hinhs = hinhAnhs.stream().map(HinhAnhTrangPhuc::new).collect(Collectors.toSet());
-        return hinhs;
+        return hinhAnhs.stream().map(HinhAnhTrangPhuc::new).collect(Collectors.toSet());
     }
     @Named("setHinhAnhs")
     default Set<HinhAnhTrangPhuc> setHinhAnhs(List<String> hinhAnhs){
-      Set<HinhAnhTrangPhuc> images =  hinhAnhs.stream().map(hinh -> HinhAnhTrangPhuc.builder()
+        return hinhAnhs.stream().map(hinh -> HinhAnhTrangPhuc.builder()
               .hinhAnh(hinh)
               .build()).collect(Collectors.toSet());
-      return images;
     }
     @Named("hasOrderCount")
     default int hasOrderCount(Set<ChiTietDonThue> chiTietDonThues){

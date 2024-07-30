@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HinhAnhTrangPhuc extends BaseEntity{
+public class HinhAnhTrangPhuc{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long maHinh;

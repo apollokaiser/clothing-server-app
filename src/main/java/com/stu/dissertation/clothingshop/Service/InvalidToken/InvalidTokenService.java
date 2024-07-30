@@ -16,7 +16,4 @@ public class InvalidTokenService {
         InvalidToken invalidToken = new InvalidToken(token, exp);
        return invalidTokenRepository.save(invalidToken);
     }
-//    public boolean checkExists(String token) {
-//        return invalidTokenRepository.findById(token).isPresent();
-//    }
 }

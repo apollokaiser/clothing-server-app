@@ -6,6 +6,8 @@ import com.stu.dissertation.clothingshop.Service.KhuyenMai.KhuyenMaiService;
 import com.stu.dissertation.clothingshop.Service.PhieuKhuyenMai.PhieuKhuyenMaiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,13 @@ public class KhuyenMaiController {
     @GetMapping("/danh-sach-khuyen-mai-danh-muc")
     public  ResponseEntity<?> getPromotionCategory() {
         ResponseMessage response = khuyenMaiService.getPromotionsCategory();
+        return new ResponseEntity<>(response, headers, OK);
+    }
+    @GetMapping("/tat-ca-danh-sach-khuyen-mai")
+    public ResponseEntity<?> getAllPromotions(@RequestParam(value="page", defaultValue = "0") int page,
+                                              @RequestParam(value="size", defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        ResponseMessage response = khuyenMaiService.getAllPromotion(pageable);
         return new ResponseEntity<>(response, headers, OK);
     }
     @GetMapping("/check-code")

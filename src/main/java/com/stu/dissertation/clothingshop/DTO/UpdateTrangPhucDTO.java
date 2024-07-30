@@ -16,7 +16,6 @@ public class UpdateTrangPhucDTO {
     private String tenTrangPhuc;
     private BigDecimal giaTien;
     private String moTa;
-    private int soLuong;
     private Long theLoai;
     private List<String> hinhAnhs;
     private List<KichThuocTrangPhucDTO> kichThuocs;

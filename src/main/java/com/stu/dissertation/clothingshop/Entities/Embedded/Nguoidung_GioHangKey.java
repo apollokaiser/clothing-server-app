@@ -13,8 +13,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Embeddable
 public class Nguoidung_GioHangKey implements Serializable {
-    Long gioHangId;
     String maNguoiDung;
-    String maTrangPhuc;
+    TrangPhuc_KichThuocKey outfitSizeId;
 }

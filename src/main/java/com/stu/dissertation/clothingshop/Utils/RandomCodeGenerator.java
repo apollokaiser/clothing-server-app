@@ -20,7 +20,6 @@ public class RandomCodeGenerator {
             int index = random.nextInt(CHARACTERS.length());
             sb.append(CHARACTERS.charAt(index));
         }
-
         return sb.toString();
     }
 

@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 public interface DonThueService {
     ResponseMessage saveOrder(OrderRequest order);
     ResponseMessage getOrder(String uid);
-    ResponseMessage saveOrderWithoutAccount(OrderRequest orderDetail);
+    ResponseMessage saveOrderWithoutAccount(OrderRequest orderDetail, String sessionCode);
 
     ResponseMessage getOrders(Pageable pageable, int status);
 

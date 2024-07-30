@@ -21,34 +21,26 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@IdClass(Nguoidung_GioHangKey.class)
 public class NguoiDung_GioHang {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="gio_hang_id", columnDefinition = "BIGINT NOT NULL")
-    private Long gioHangId;
-    @Id
-    @Column(name="ma_trang_phuc", columnDefinition = "VARCHAR(64) NOT NULL")
-    private String maTrangPhuc;
-    @Id
-    @Column(name="ma_nguoi_dung", columnDefinition = "BIGINT NOT NULL")
-    private String maNguoiDung;
+    @EmbeddedId
+    private Nguoidung_GioHangKey id;
     @ManyToOne
     @MapsId("maNguoiDung")
     @JoinColumn(name = "ma_nguoi_dung")
     @JsonIgnore
     NguoiDung nguoiDung;
-
+    @MapsId("outfitSizeId")
     @ManyToOne
-    @MapsId("maTrangPhuc")
-    @JoinColumn(name = "ma_trang_phuc")
-    @JsonIgnore
-    private
-    TrangPhuc trangPhuc;
-    @Column(name="ma_kich_thuoc", columnDefinition = "CHAR(10)")
-    private String kichThuoc;
+    @JoinColumns({
+            @JoinColumn(name = "ma_kich_thuoc", referencedColumnName = "ma_kich_thuoc"),
+            @JoinColumn(name = "ma_trang_phuc", referencedColumnName = "ma_trang_phuc")
+    })
+    private KichThuoc_TrangPhuc outfitSize;
     @Column(name="so_luong", columnDefinition = "INT NOT NULL")
-    private int soLuong;
-    @Column(name="is_full_outfit", columnDefinition = "TINYINT(1) NOT NULL")
-    private boolean toanPhan;
+    private Integer soLuong;
+    // mã trang phục chính của cái trang phục có kích thước ở trên
+    @ManyToOne
+    @JoinColumn(name="ma_trang_phuc_chinh", referencedColumnName = "ma_trang_phuc")
+    @JsonIgnore
+    private TrangPhuc trangPhucChinh;
 }

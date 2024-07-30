@@ -31,7 +31,6 @@ public class GioHangDAOImpl implements GioHangDAO{
       if(gioHangs.isEmpty()) return null;
       return gioHangs.stream().map(gioHangMapper::convert).collect(Collectors.toSet());
     }
-
     @Override
     public void updateCarts(UpDateCartRequest cart) {
         try {

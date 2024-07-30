@@ -2,6 +2,7 @@ package com.stu.dissertation.clothingshop.Service.KhuyenMai;
 
 import com.stu.dissertation.clothingshop.Payload.Request.AddpromotionRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
+import org.springframework.data.domain.Pageable;
 
 public interface KhuyenMaiService {
     ResponseMessage getKhuyenMaiThanhToan();
@@ -16,4 +17,6 @@ public interface KhuyenMaiService {
 
     ResponseMessage getCategoryInPromotion(Long id);
     ResponseMessage getPromotionsCategory();
+
+    ResponseMessage getAllPromotion(Pageable pageable);
 }

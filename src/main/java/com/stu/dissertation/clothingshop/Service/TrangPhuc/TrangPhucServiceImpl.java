@@ -1,10 +1,7 @@
 package com.stu.dissertation.clothingshop.Service.TrangPhuc;
 
 import com.stu.dissertation.clothingshop.DAO.TrangPhuc.TrangPhucDAO;
-import com.stu.dissertation.clothingshop.DTO.KichThuocTrangPhucDTO;
-import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
-import com.stu.dissertation.clothingshop.DTO.TrangPhucDetailDTO;
-import com.stu.dissertation.clothingshop.DTO.UpdateTrangPhucDTO;
+import com.stu.dissertation.clothingshop.DTO.*;
 import com.stu.dissertation.clothingshop.Entities.*;
 import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
@@ -62,7 +59,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     public ResponseMessage getTrangPhuc(Pageable pageable) {
         List<TrangPhucDTO> trangPhucList = trangPhucRepository.findAll(pageable)
                 .stream()
-                .filter(trangphuc-> trangphuc.getTrangPhucChinhs().isEmpty())
+                .filter(trangphuc-> trangphuc.getTrangPhucChinh()==null)
                 .map(trangPhucMapper::convert).toList();
         return ResponseMessage.builder()
                 .status(OK)
@@ -87,8 +84,9 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     }
 
     @Override
+    @Transactional
     public ResponseMessage getTrangPhucInCart(List<String> ids) {
-        List<TrangPhucDetailDTO> trangPhucs = trangPhucDAO.getTrangPhucInCart(ids);
+        List<OutfitCartDTO> trangPhucs = trangPhucDAO.getTrangPhucInCart(ids);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get cart detail data successfully")

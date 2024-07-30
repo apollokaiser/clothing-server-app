@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.Service.TheLoai;
 
+import com.stu.dissertation.clothingshop.Cache.CacheService.TheLoai.TheLoaiRedisService;
 import com.stu.dissertation.clothingshop.DTO.TheLoaiDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
@@ -28,22 +29,33 @@ public class TheLoaiServiceImpl implements TheLoaiService{
     private final TrangPhucRepository trangPhucRepository;
     private final TrangPhucMapper trangPhucMapper;
     private final TheLoaiMapper theLoaiMapper;
+    private final TheLoaiRedisService theLoaiRedisService;
     @Override
     @Transactional
     public ResponseMessage getTheLoai() {
-        List<TheLoai> theLoais = theLoaiRepository.findAll();
-        if(theLoais.isEmpty()) return null;
-        List<TheLoaiDTO> dtos =  theLoais.stream()
-                .filter(item->item.getParent()==null)
-                .map(theLoaiMapper::convert)
-                .toList();
-        return ResponseMessage.builder()
+        ResponseMessage response = ResponseMessage.builder()
                 .status(OK)
                 .message("Get cateogies successfully")
-                .data(new HashMap<>(){{
-                    put("theloais", dtos);
-                }})
                 .build();
+        List<TheLoaiDTO> categories = theLoaiRedisService.getTheLoai();
+        if(categories == null) {
+            List<TheLoai> theLoais = theLoaiRepository.findAll();
+            if (theLoais.isEmpty()) return null;
+            List<TheLoaiDTO> dto = theLoais.stream()
+                    .filter(item -> item.getParent() == null)
+                    .map(theLoaiMapper::convert)
+                    .toList();
+            //update into redis
+            theLoaiRedisService.updateTheLoai(dto);
+            response.setData(new HashMap<>(){{
+                put("theloais", dto);
+            }});
+        } else {
+            response.setData(new HashMap<>(){{
+                put("theloais", categories);
+            }});
+        }
+        return response;
     }
     @Override
     @Transactional

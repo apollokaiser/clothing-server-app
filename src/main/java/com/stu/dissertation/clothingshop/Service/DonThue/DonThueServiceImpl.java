@@ -1,10 +1,10 @@
 package com.stu.dissertation.clothingshop.Service.DonThue;
 
-import com.stu.dissertation.clothingshop.DTO.ChiTietDonThueDTO;
-import com.stu.dissertation.clothingshop.DTO.DonThueDTO;
-import com.stu.dissertation.clothingshop.DTO.DonThuePreviewDTO;
-import com.stu.dissertation.clothingshop.DTO.PhieuHoanTraDTO;
+import com.stu.dissertation.clothingshop.Cache.CacheService.GioHang.GioHangRedisService;
+import com.stu.dissertation.clothingshop.DTO.*;
 import com.stu.dissertation.clothingshop.Entities.*;
+import com.stu.dissertation.clothingshop.Entities.Embedded.ChiTietDonThueKey;
+import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Enum.PaymentMethod;
 import com.stu.dissertation.clothingshop.Enum.PaymentStatus;
@@ -33,16 +33,17 @@ import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
-public class DonThueServiceImpl implements DonThueService{
+public class DonThueServiceImpl implements DonThueService {
     private final DonThueRepository donThueRepository;
     private final NguoiDungRepository nguoiDungRepository;
     private final TrangThaiRepository trangThaiRepository;
-    private final TrangPhucRepository trangPhucRepository;
+    private final OutfitSizeRepository outfitSizeRepository;
     private final PhieuKhuyenMaiRepository phieuKhuyenMaiRepository;
     private final PhieuHoanTraRepository phieuHoanTraRepository;
     private final DatCocRepository datCocRepository;
     private final ChiTietDonThueMapper chiTietDonThueMapper;
     private final DonThueMapper donThueMapper;
+    private final GioHangRedisService gioHangRedisService;
 
     @Override
     @Transactional
@@ -51,43 +52,18 @@ public class DonThueServiceImpl implements DonThueService{
         DonThue order = donThueMapper.convert(donThue);
         order.setMaDonThue(UUID.randomUUID().toString());
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!email.isEmpty()) {
+        if (!email.isEmpty()) {
             NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
-                    .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
-            if(!Objects.equals(nguoiDung.getId(), donThue.getNguoiDung()))
+                    .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+            if (!Objects.equals(nguoiDung.getId(), donThue.getNguoiDung()))
                 throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
             order.setNguoiDung(nguoiDung);
-            TrangThai trangThai = trangThaiRepository.findById(1L)
-                    .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
-            order.setTrangThai(trangThai);
-            if(!donThue.getPhieuKhuyenMai().isEmpty()) {
-                PhieuKhuyenMai phieuKhuyenMai = phieuKhuyenMaiRepository.findById(donThue.getPhieuKhuyenMai())
-                        .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_PROMOTION_CODE));
-                order.setPhieuKhuyenMai(phieuKhuyenMai);
-            }
-            List<TrangPhuc> listTrangPhuc = trangPhucRepository
-                    .getTrangPhucByIds(donThue.getChiTiet().stream().map(ChiTietDonThueDTO::getMaTrangPhuc).toList());
-            Set<ChiTietDonThue> chiTiet = donThue.getChiTiet().stream()
-                    .map(detail -> {
-                        ChiTietDonThue chiTietDonThue = chiTietDonThueMapper.convert(detail);
-                        chiTietDonThue.setTrangPhuc(listTrangPhuc.stream()
-                               .filter(trangPhuc -> trangPhuc.getId().equals(detail.getMaTrangPhuc()))
-                               .findFirst()
-                               .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NULL_DATA)));
-                        chiTietDonThue.setMaChiTiet(UUID.randomUUID().toString());
-                        chiTietDonThue.setDonThue(order);
-                        return chiTietDonThue;
-                    }).collect(Collectors.toSet());
-            order.setChiTietDonThues(chiTiet);
-            order.setPayment(PaymentMethod.valueOf(donThue.getPayment()));
-            order.setNgayThue(Instant.now().getEpochSecond());
-            donThueRepository.save(order);
+            return save(order, donThue, nguoiDung.getId());
+        } else {
+            throw new ApplicationException(BusinessErrorCode.USER_NOT_FOUND);
         }
-        return ResponseMessage.builder()
-                .status(OK)
-                .message("Order has been created successfully")
-                .build();
     }
+
     @Transactional
     public ResponseMessage getOrder(String uid) {
         Set<DonThue> order = donThueRepository.getDonThueByUID(uid);
@@ -96,7 +72,7 @@ public class DonThueServiceImpl implements DonThueService{
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Order retrieved successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("order", donThueDTO);
                 }})
                 .build();
@@ -104,37 +80,51 @@ public class DonThueServiceImpl implements DonThueService{
 
     @Override
     @Transactional
-    public ResponseMessage saveOrderWithoutAccount(OrderRequest req) {
+    public ResponseMessage saveOrderWithoutAccount(OrderRequest req, String sessionCode) {
         DonThueDTO donThue = req.order();
         DonThue order = donThueMapper.convert(donThue);
         order.setMaDonThue(UUID.randomUUID().toString());
-            TrangThai trangThai = trangThaiRepository.findById(1L)
-                    .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
-            order.setTrangThai(trangThai);
-            if(!donThue.getPhieuKhuyenMai().isEmpty()) {
-                PhieuKhuyenMai phieuKhuyenMai = phieuKhuyenMaiRepository.findById(donThue.getPhieuKhuyenMai())
-                        .orElseThrow(()-> new ApplicationException(BusinessErrorCode.INVALID_PROMOTION_CODE));
-                order.setPhieuKhuyenMai(phieuKhuyenMai);
-            }
-            List<TrangPhuc> listTrangPhuc = trangPhucRepository
-                    .getTrangPhucByIds(donThue.getChiTiet()
-                    .stream().map(ChiTietDonThueDTO::getMaTrangPhuc)
-                    .toList());
-            Set<ChiTietDonThue> chiTiet = donThue.getChiTiet().stream()
-                    .map(detail -> {
-                        ChiTietDonThue chiTietDonThue = chiTietDonThueMapper.convert(detail);
-                        chiTietDonThue.setTrangPhuc(listTrangPhuc.stream()
-                                .filter(trangPhuc -> trangPhuc.getId().equals(detail.getMaTrangPhuc()))
-                                .findFirst()
-                                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NULL_DATA)));
-                        chiTietDonThue.setMaChiTiet(UUID.randomUUID().toString());
-                        chiTietDonThue.setDonThue(order);
-                        return chiTietDonThue;
-                    }).collect(Collectors.toSet());
-            order.setChiTietDonThues(chiTiet);
-            order.setPayment(PaymentMethod.valueOf(donThue.getPayment()));
-            order.setNgayThue(Instant.now().getEpochSecond());
-            donThueRepository.save(order);
+        return save(order, donThue, sessionCode);
+    }
+
+    @Transactional
+    private ResponseMessage save(DonThue order, DonThueDTO donThue, String id) {
+        TrangThai trangThai = trangThaiRepository.findById(1L)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
+        order.setTrangThai(trangThai);
+        if (!donThue.getPhieuKhuyenMai().isEmpty()) {
+            PhieuKhuyenMai phieuKhuyenMai = phieuKhuyenMaiRepository.findById(donThue.getPhieuKhuyenMai())
+                    .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INVALID_PROMOTION_CODE));
+            order.setPhieuKhuyenMai(phieuKhuyenMai);
+        }
+        List<TrangPhuc_KichThuocKey> outfitSizeIds = donThue.getChiTiet().stream()
+                .map(ChiTietDonThueDTO::getOutfitSizeId)
+                .toList();
+        List<KichThuoc_TrangPhuc> listTrangPhuc = outfitSizeRepository.getOutfitByIds(outfitSizeIds);
+        List<GioHangDTO> gioHangDTOS = new ArrayList<GioHangDTO>();
+        Set<ChiTietDonThue> chiTiet = donThue.getChiTiet().stream()
+                .map(detail -> {
+                    ChiTietDonThueKey key = new ChiTietDonThueKey();
+                    key.setMaDonThue(order.getMaDonThue());
+                    key.setOutfitSizeId(detail.getOutfitSizeId());
+                    gioHangDTOS.add(GioHangDTO.builder()
+                            .id(key.getOutfitSizeId().getMaTrangPhuc())
+                            .size(key.getOutfitSizeId().getMaKichThuoc())
+                            .build());
+                    ChiTietDonThue chiTietDonThue = chiTietDonThueMapper.convert(detail);
+                    chiTietDonThue.setOutfitSize(listTrangPhuc.stream()
+                            .filter(trangPhuc -> trangPhuc.getId().equals(detail.getOutfitSizeId()))
+                            .findFirst()
+                            .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NULL_DATA)));
+                    chiTietDonThue.setDonThue(order);
+                    chiTietDonThue.setId(key);
+                    return chiTietDonThue;
+                }).collect(Collectors.toSet());
+        order.setChiTietDonThues(chiTiet);
+        order.setPayment(PaymentMethod.valueOf(donThue.getPayment()));
+        order.setNgayThue(Instant.now().getEpochSecond());
+        donThueRepository.save(order);
+        gioHangRedisService.deleteCarts(id, gioHangDTOS);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Order has been created successfully")
@@ -143,7 +133,7 @@ public class DonThueServiceImpl implements DonThueService{
 
     @Override
     @Transactional
-   @ManagerRequired
+    @ManagerRequired
     public ResponseMessage getOrders(Pageable pageable, int status) {
         List<DonThue> orders = donThueRepository.getDonThue(status, pageable);
         List<DonThuePreviewDTO> donThueDTO = orders.stream().map(donThueMapper::convertPreview)
@@ -151,7 +141,7 @@ public class DonThueServiceImpl implements DonThueService{
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Orders retrieved successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("orders", donThueDTO);
                 }})
                 .build();
@@ -161,13 +151,13 @@ public class DonThueServiceImpl implements DonThueService{
     @Transactional
     public ResponseMessage changeStatus(String id, Long status) {
         TrangThai trangThai = trangThaiRepository.findById(status)
-                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         DonThue donThue = donThueRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
-        if(Objects.equals(trangThai.getTrangThai(), donThue.getTrangThai().getTrangThai())) {
+        if (Objects.equals(trangThai.getTrangThai(), donThue.getTrangThai().getTrangThai())) {
             throw new ApplicationException(BusinessErrorCode.NO_CHANGE_APPLY);
         }
-        if(trangThai.getMaTrangThai() < donThue.getTrangThai().getMaTrangThai()){
+        if (trangThai.getMaTrangThai() < donThue.getTrangThai().getMaTrangThai()) {
             throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
         }
         donThue.setTrangThai(trangThai);
@@ -175,7 +165,7 @@ public class DonThueServiceImpl implements DonThueService{
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Change order status successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("trangThai", trangThai);
                 }})
                 .build();
@@ -185,7 +175,7 @@ public class DonThueServiceImpl implements DonThueService{
     @Transactional
     public ResponseMessage addDeposit(DatCocRequest datCocRequest) {
         DonThue donThue = donThueRepository.findById(datCocRequest.maDonThue())
-                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         DatCoc datCoc = DatCoc.builder()
                 .payment(PaymentMethod.valueOf(datCocRequest.payment()))
                 .ngayCoc(Instant.now().getEpochSecond())
@@ -204,7 +194,7 @@ public class DonThueServiceImpl implements DonThueService{
     @Transactional
     public ResponseMessage printReturnBill(PhieuHoanTraDTO phieu) {
         DonThue donThue = donThueRepository.findById(phieu.getId())
-                .orElseThrow(()->new ApplicationException(BusinessErrorCode.NOT_FOUND, "Cannot find order "));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND, "Cannot find order "));
         PhieuHoanTra phieuHoanTra = PhieuHoanTraMapper.INSTANCE.convert(phieu);
         phieuHoanTra.setDonThue(donThue);
         phieuHoanTra.setNgayTra(Instant.now().getEpochSecond());
@@ -218,11 +208,11 @@ public class DonThueServiceImpl implements DonThueService{
     @Override
     @Transactional
     public ResponseMessage unconfirmOrderCount() {
-        int orderCount = donThueRepository.getOrdersCount(1 );
+        int orderCount = donThueRepository.getOrdersCount(1);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Unconfirm order count successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("orderCount", orderCount);
                 }})
                 .build();
@@ -232,12 +222,12 @@ public class DonThueServiceImpl implements DonThueService{
     @Transactional
     public ResponseMessage getOrderDetail(String id) {
         DonThue order = donThueRepository.findById(id)
-                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         DonThueDTO donThueDTO = donThueMapper.convert(order);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Order detail retrieved successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("order_detail", donThueDTO);
                 }})
                 .build();

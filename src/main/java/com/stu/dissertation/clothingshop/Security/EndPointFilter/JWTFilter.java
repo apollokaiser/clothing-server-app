@@ -30,7 +30,7 @@ public class JWTFilter extends OncePerRequestFilter {
     private List<String> PUBLIC_ENDPOINTS = List.of();
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
         if (isPublicEndpoint(request.getRequestURI())) {

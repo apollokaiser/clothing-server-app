@@ -26,6 +26,10 @@ public class TheLoai extends BaseEntity{
     private String tenLoai;
     @Column(name="url",columnDefinition = "VARCHAR(100) NOT NULL")
     private String slug;
+    @Column(name="moTa",columnDefinition = "TEXT NOT NULL")
+    private String moTa;
+    @Column(name="for_accessary", columnDefinition = "TINYINT(1)")
+    private Boolean forAccessary;
     @OneToMany(mappedBy = "theLoai", fetch = FetchType.LAZY)
     @JsonIgnore
     private Set<TrangPhuc> trangPhucs = new HashSet<>();

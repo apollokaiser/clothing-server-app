@@ -18,9 +18,6 @@ public class CustomJWTDecoder implements JwtDecoder {
     private String secretKey;
     @Autowired
     private JWTService jwtService;
-    @Autowired
-    private NguoiDungRepository nguoiDungRepository;
-
     private NimbusJwtDecoder jwtDecoder = null;
 
     @Override

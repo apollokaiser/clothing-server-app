@@ -1,13 +1,19 @@
 package com.stu.dissertation.clothingshop.DTO;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Getter
 @Setter
-public class GioHangDTO {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class GioHangDTO implements Serializable {
     private String id;
     private int quantity;
     private String size;
-    private boolean full;
+    private String parentId;
 }

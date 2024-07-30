@@ -5,6 +5,7 @@ import com.stu.dissertation.clothingshop.DTO.AdminStaffDetailDTO;
 import com.stu.dissertation.clothingshop.DTO.NguoiDungDetailDTO;
 import com.stu.dissertation.clothingshop.DTO.TaiKhoanDTO;
 import com.stu.dissertation.clothingshop.Entities.*;
+import com.stu.dissertation.clothingshop.Enum.ROLE;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -16,7 +17,9 @@ import java.util.stream.Collectors;
 public interface NguoiDungMapper {
     @Named("getAdminRole")
     default String getAdminRole(Set<Role> roles){
-        return roles.stream().filter(r->!r.getRole().equals("ROLE_ADMIN")).findFirst().get().getRole();
+        return roles.stream().filter(r->
+                        !r.getRole().equals(ROLE.ADMIN.getRole()) && !r.getRole().equals(ROLE.USER.getRole()))
+                .findFirst().get().getRole();
     }
     @Named("getDonThueCount")
     default int getDonThueCount(Set<DonThue> donThues){

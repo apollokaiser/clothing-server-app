@@ -2,6 +2,7 @@ package com.stu.dissertation.clothingshop.Entities.Embedded;
 
 import com.stu.dissertation.clothingshop.Entities.DonThue;
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
+import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
@@ -11,8 +12,8 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Embeddable
 public class ChiTietDonThueKey implements Serializable {
-    private String maChiTiet;
-    private DonThue donThue;
-    private TrangPhuc trangPhuc;
+    private String maDonThue;
+    private TrangPhuc_KichThuocKey outfitSizeId;
 }

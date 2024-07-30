@@ -12,9 +12,12 @@ import com.stu.dissertation.clothingshop.Payload.Request.AddpromotionRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.KhuyenMaiRepository;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
+import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.AdminRequired;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -158,6 +161,22 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
                 .message("get promotion categories successfully")
                 .data(new HashMap<>(){{
                    put("theloai_promotions", khuyenMaisDTOs);
+                }})
+                .build();
+    }
+
+    @Override
+    @Transactional
+    @AdminRequired
+    public ResponseMessage getAllPromotion(Pageable pageable) {
+        Page<KhuyenMai> khuyenMais = khuyenMaiRepository.findAll(pageable);
+        List<KhuyenMai> promotions = khuyenMais.stream().toList();
+        List<KhuyenMaiDTO> khuyenMaiDTOs = promotions.stream().map(khuyenMaiMapper::convert).toList();
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("get promotion categories successfully")
+                .data(new HashMap<>(){{
+                    put("promotions",khuyenMaiDTOs);
                 }})
                 .build();
     }

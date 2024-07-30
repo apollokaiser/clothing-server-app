@@ -25,8 +25,10 @@ public class ThanhToanController {
             return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
     @PostMapping(value="/thanh-toan-tien-loi")
-    public ResponseEntity<?> paymentWithInterest(@RequestBody @Valid OrderRequest orderDetail) {
-        ResponseMessage response = donThueService.saveOrderWithoutAccount(orderDetail);
+    public ResponseEntity<?> paymentWithInterest(
+            @RequestBody @Valid OrderRequest orderDetail,
+            @RequestParam(value="sessionCode") String sessionCode) {
+        ResponseMessage response = donThueService.saveOrderWithoutAccount(orderDetail, sessionCode);
             return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 

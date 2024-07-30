@@ -10,6 +10,5 @@ import java.math.BigDecimal;
 public class TrangPhucPreviewDTO {
     private String id;
     private String tenTrangPhuc;
-    private BigDecimal giaTien;
-    private BigDecimal giaTronBo;
+    private TrangPhucPreviewDTO trangPhucChinh;
 }

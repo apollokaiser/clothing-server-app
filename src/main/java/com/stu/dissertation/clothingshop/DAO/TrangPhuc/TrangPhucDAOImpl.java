@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.DAO.TrangPhuc;
 
+import com.stu.dissertation.clothingshop.DTO.OutfitCartDTO;
 import com.stu.dissertation.clothingshop.DTO.TrangPhucDetailDTO;
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
 import com.stu.dissertation.clothingshop.Mapper.TrangphucDetailMapper;
@@ -27,7 +28,8 @@ public class TrangPhucDAOImpl implements TrangPhucDAO {
     }
 
     @Override
-    public List<TrangPhucDetailDTO> getTrangPhucInCart(List<String> ids) {
+    @Transactional
+    public List<OutfitCartDTO> getTrangPhucInCart(List<String> ids) {
         List<TrangPhuc> trangPhucs = trangPhucRepository.getTrangPhucByIds(ids);
         return trangPhucs.stream().map(trangphucDetailMapper::convertToCartItem).toList();
     }

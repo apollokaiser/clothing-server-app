@@ -236,12 +236,14 @@ public class StaffServiceImpl implements StaffService {
     @ManagerRequired
     public ResponseMessage changeRole(String id, String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        List<String> thisAdminRole = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+        List<String> authRoles = auth.getAuthorities()
+                .stream().map(GrantedAuthority::getAuthority)
+                .toList();
         NguoiDung admin = nguoiDungRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND, "Admin not found"));
         List<String> adminRoles = admin.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        //Không cho cập nhật những người có cùng quyền với nhau
-        if(new HashSet<>(thisAdminRole).containsAll(adminRoles)) {
+        //Không cho cập nhật những người có cùng quyền với nhau (ví dụ : FULL_CONTROL <--> FULL_CONTROL )
+        if(new HashSet<>(authRoles).containsAll(adminRoles)) {
             throw new ApplicationException(BusinessErrorCode.UNAUTHORIZED_FOR_UPDATE);
         }
         //Không cho phép cập nhật cho người quản lý cao nhất
@@ -256,7 +258,7 @@ public class StaffServiceImpl implements StaffService {
         // Nếu người đang đươ thêm quyền đã có quyền đó rồi
         if (adminRoles.contains(role))
             throw new ApplicationException(BusinessErrorCode.DUPLICATE_DATA, "Role already exists");
-        //Kiểm tra xem trong quyền của nhân viện được cập nhaatj có quyền nào có mức ưu tiên như vậy không
+        //Kiểm tra xem trong quyền của nhân viện được cập nhật có quyền nào có mức ưu tiên như vậy không
         Optional<Role> roleSamePriority = admin.getRoles().stream()
                 .filter(r-> Objects.equals(r.getPriority(), roleEntity.getPriority()))
                 .findFirst();

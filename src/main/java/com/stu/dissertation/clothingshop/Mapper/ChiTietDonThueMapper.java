@@ -12,13 +12,14 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface ChiTietDonThueMapper {
     ChiTietDonThueMapper INSTANCE = Mappers.getMapper(ChiTietDonThueMapper.class);
-    @Mapping(target = "trangPhuc", ignore = true)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "donThue", ignore = true)
-    @Mapping(target = "maChiTiet", ignore = true)
+    @Mapping(target="outfitSize", ignore = true)
+    @Mapping(target="trangPhucChinh", ignore = true)
     ChiTietDonThue convert(ChiTietDonThueDTO chiTiet);
 
-    @Mapping(target="maTrangPhuc", source = "trangPhuc.id")
-    @Mapping(target = "trangPhuc", source = "trangPhuc", qualifiedByName = "getTrangPhucInOrder")
+    @Mapping(target="outfitSizeId", source = "id.outfitSizeId")
+    @Mapping(target = "trangPhuc", source = "outfitSize.trangPhuc", qualifiedByName = "getTrangPhucInOrder")
     ChiTietDonThueDTO convert(ChiTietDonThue chitiet);
 
     @Named("getTrangPhucInOrder")

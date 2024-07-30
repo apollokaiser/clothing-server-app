@@ -14,17 +14,11 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(ChiTietDonThueKey.class)
 public class ChiTietDonThue{
-    @Id
-    @Column(name="ma_chi_tiet", columnDefinition = "VARCHAR(255)")
-    private String maChiTiet;
-    @Column(name="ma_kich_thuoc", columnDefinition = "CHAR(10)")
-    private String maKichThuoc;
+    @EmbeddedId
+    private ChiTietDonThueKey id;
     @Column(name="so_luong", columnDefinition = "INT NOT NULL")
     private int soLuong;
-    @Column(name="is_full_outfit", columnDefinition = "TINYINT(1) NOT NULL")
-    private boolean toanPhan;
     @Column(name="gia_tien", columnDefinition = "DECIMAL(10,2) NOT NULL")
     private BigDecimal giaTien;
     @Column(name="ma_khuyen_mai", columnDefinition = "BIGINT")
@@ -34,17 +28,22 @@ public class ChiTietDonThue{
     @Column(name="tong_tien", columnDefinition = "DECIMAL(10,2) NOT NULL")
     private BigDecimal tongTien;
     @ManyToOne
-    @Id
-    @JoinColumn(name = "ma_trang_phuc",
-            referencedColumnName = "ma_trang_phuc",
-            foreignKey = @ForeignKey(name="FK_ctdonthue_trangphuc"))
-    @JsonIgnore
-    private TrangPhuc trangPhuc;
-    @ManyToOne
-    @Id
-    @JoinColumn(name = "ma_don_thue",
-            referencedColumnName = "ma_don_thue",
-            foreignKey = @ForeignKey(name = "FK_ctdonthue_donthue"))
+    @MapsId("maDonThue")
+    @JoinColumn(name = "ma_don_thue")
     @JsonIgnore
     private DonThue donThue;
+    @MapsId("outfitSizeId")
+    @ManyToOne
+    @JoinColumns({
+            @JoinColumn(name = "ma_kich_thuoc", referencedColumnName = "ma_kich_thuoc"),
+            @JoinColumn(name = "ma_trang_phuc", referencedColumnName = "ma_trang_phuc")
+    })
+    private KichThuoc_TrangPhuc outfitSize;
+
+    @ManyToOne
+    @JoinColumn(
+            name="ma_trang_phuc_chinh",
+            referencedColumnName = "ma_trang_phuc")
+    @JsonIgnore
+    private TrangPhuc trangPhucChinh;
 }
