@@ -10,6 +10,6 @@ public class TheLoaiDTO {
     private Long maLoai;
     private String tenLoai;
     private String slug;
+    private Boolean forAccessary;
     private List<TheLoaiDTO> children;
-    private boolean khuyenMai;
 }

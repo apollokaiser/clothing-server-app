@@ -18,6 +18,8 @@ public class TrangPhucDTO {
     private String tenTrangPhuc;
     private BigDecimal giaTien;
     private List<String> hinhAnhs;
+    private Boolean hasPiece;
+    private int soLuong;
     private int hasOrderCount;
 
 }

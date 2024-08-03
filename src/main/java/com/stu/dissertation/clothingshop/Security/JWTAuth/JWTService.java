@@ -5,6 +5,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.stu.dissertation.clothingshop.Cache.CacheService.InvalidToken.InvalidTokenRedisService;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
@@ -27,7 +28,7 @@ public class JWTService {
     private String secretKey;
     @Value("${application.security.jwt.expiration-token}")
     private long expiration;
-    private final InvalidTokenRepository invalidatedTokenRepository;
+    private final InvalidTokenRedisService invalidTokenRedisService;
 
     public String generateToken(NguoiDung user) throws JOSEException {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
@@ -84,7 +85,7 @@ public class JWTService {
             SignedJWT signedJWT = SignedJWT.parse(token);
             var verified = signedJWT.verify(verifier);
 
-            if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+            if (invalidTokenRedisService.checkToken(signedJWT.getJWTClaimsSet().getJWTID()))
                 throw new ApplicationException(BusinessErrorCode.TOKEN_HAS_DESTROYED);
             return signedJWT.getJWTClaimsSet();
         } catch (JOSEException | ParseException | ApplicationException e) {

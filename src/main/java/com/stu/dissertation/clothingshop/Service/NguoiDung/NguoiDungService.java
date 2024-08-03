@@ -1,6 +1,8 @@
 package com.stu.dissertation.clothingshop.Service.NguoiDung;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.stu.dissertation.clothingshop.Cache.CacheService.InvalidToken.InvalidTokenRedisService;
 import com.stu.dissertation.clothingshop.DAO.NguoiDung.NguoiDungDAO;
 import com.stu.dissertation.clothingshop.DTO.NguoiDungDetailDTO;
 import com.stu.dissertation.clothingshop.Entities.*;
@@ -14,7 +16,6 @@ import com.stu.dissertation.clothingshop.Repositories.DiaChiRepository;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.GoogleIdentityService;
-import com.stu.dissertation.clothingshop.Service.InvalidToken.InvalidTokenService;
 import com.stu.dissertation.clothingshop.Service.RefreshToken.RefreshTokenService;
 import com.stu.dissertation.clothingshop.Service.UserToken.UserTokenService;
 import com.stu.dissertation.clothingshop.Utils.RandomCodeGenerator;
@@ -48,7 +49,7 @@ public class NguoiDungService {
     private final PasswordEncoder passwordEncoder;
     private final DiaChiRepository diaChiRepository;
     private final NguoiDungRepository nguoiDungRepository;
-    private final InvalidTokenService invalidTokenService;
+    private final InvalidTokenRedisService invalidTokenRedisService;
 
     public ResponseMessage activateAccount(String token) {
         try {
@@ -250,7 +251,9 @@ public class NguoiDungService {
         }
       NguoiDung user =  nguoiDungRepository.save(nguoiDung);
         String jwtHeader = request.getHeader("Authorization").substring(7);
-        invalidTokenService.save(jwtHeader);
+        // lưu invalid token vào redis
+        JWTClaimsSet jwt = jwtService.verifiedToken(jwtHeader);
+        invalidTokenRedisService.addToken(jwt.getJWTID(), jwt.getExpirationTime().getTime());
         try {
             String accessToken = jwtService.generateToken(user);
         return ResponseMessage.builder()
@@ -336,5 +339,12 @@ public class NguoiDungService {
                .status(OK)
                .message("Update address successfully")
                .build();
+    }
+
+    public void logout(String accessToken) {
+        JWTClaimsSet jwt = jwtService.verifiedToken(accessToken);
+         String jwtID = jwt.getJWTID();
+         Long jwtExp = jwt.getExpirationTime().getTime();
+        invalidTokenRedisService.addToken(jwtID,jwtExp);
     }
 }

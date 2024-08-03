@@ -8,11 +8,12 @@ import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Mapper.TrangPhucMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
-import com.stu.dissertation.clothingshop.Payload.Request.UpdateOutfit;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.KichThuocRepository;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import com.stu.dissertation.clothingshop.Repositories.TrangPhucRepository;
+import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.ManagerRequired;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.OK;
@@ -44,14 +46,14 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         Map<String, Object> datas = new HashMap<>();
         List<TrangPhuc> lastestOutfit = trangPhucRepository.getLastestOutfit(pageable);
         List<TrangPhucDTO> lastestDTOs = lastestOutfit.stream().map(trangPhucMapper::convert).toList();
-        datas.put("lastest_outfit",lastestDTOs);
-        if(attention!=null && !attention.ids().isEmpty()) {
+        datas.put("lastest_outfit", lastestDTOs);
+        if (attention != null && !attention.ids().isEmpty()) {
             List<TrangPhuc> attentionOutfit = trangPhucRepository.findAllById(attention.ids());
             List<TrangPhucDTO> attentionDTOs = attentionOutfit.stream().map(trangPhucMapper::convert).toList();
             datas.put("attention_outfit", attentionDTOs);
         }
         response.setData(datas);
-            return response;
+        return response;
     }
 
     @Override
@@ -59,7 +61,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     public ResponseMessage getTrangPhuc(Pageable pageable) {
         List<TrangPhucDTO> trangPhucList = trangPhucRepository.findAll(pageable)
                 .stream()
-                .filter(trangphuc-> trangphuc.getTrangPhucChinh()==null)
+                .filter(trangphuc -> trangphuc.getTrangPhucChinh() == null)
                 .map(trangPhucMapper::convert).toList();
         return ResponseMessage.builder()
                 .status(OK)
@@ -116,30 +118,45 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN') and " +
             "hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL', 'OUTFIT_UPDATE')")
-    public ResponseMessage addTrangPhuc(UpdateOutfit trangPhuc) {
-        UpdateTrangPhucDTO dto = trangPhuc.trangPhuc();
+    public ResponseMessage addTrangPhuc(UpdateTrangPhucDTO dto) {
         TrangPhuc outfit = trangPhucMapper.convert(dto);
-        String id = generateOutfitID(dto.getTheLoai(), false);
+        String id = generateOutfitID(dto.getTheLoai(), outfit.isHasPiece());
         outfit.setId(id);
         TheLoai theLoai = theLoaiRepository.getReferenceById(dto.getTheLoai());
         outfit.setTheLoai(theLoai);
         outfit.setTinhTrang(true);
-        if (!dto.getKichThuocs().isEmpty()) {
-            List<String> kt = dto.getKichThuocs().stream()
-                    .map(KichThuocTrangPhucDTO::getMaKichThuoc).toList();
-            List<KichThuoc> kichThuocs = kichThuocRepository.getKichThuocByIds(kt);
-            Set<KichThuoc_TrangPhuc> outfitSize = kichThuocs.stream().map(kichThuoc -> {
-                KichThuocTrangPhucDTO dtoSize = dto.getKichThuocs().stream()
-                        .filter(item -> Objects.equals(item.getMaKichThuoc(), kichThuoc.getId())).findFirst().get();
-                return KichThuoc_TrangPhuc.builder()
-                        .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
-                        .trangPhuc(outfit)
-                        .kichThuoc(kichThuoc)
-                        .soLuong(dtoSize.getSoLuong())
-                        .build();
-            }).collect(Collectors.toSet());
-            outfit.setKichThuocTrangPhucs(outfitSize);
-        }
+        List<KichThuoc> kichThuocEntity = kichThuocRepository.findAll();
+        // tạm thời phong ấn coi có lỗi gì không ! Có thì lấy lại
+//        List<String> size = dto.getKichThuocs().stream()
+//                .map(KichThuocTrangPhucDTO::getMaKichThuoc).toList();
+//        // tạo 1 set KichThuoc_TrangPhuc cho outfit cần thêm
+//        Set<KichThuoc_TrangPhuc> outfitSize = kichThuocEntity.stream().map(kichThuoc -> {
+//            KichThuocTrangPhucDTO dtoSize = dto.getKichThuocs().stream()
+//                    .filter(item -> Objects.equals(item.getMaKichThuoc(), kichThuoc.getId())).findFirst().get();
+//            return KichThuoc_TrangPhuc.builder()
+//                    .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
+//                    .trangPhuc(outfit)
+//                    .kichThuoc(kichThuoc)
+//                    .soLuong(dtoSize.getSoLuong())
+//                    .build();
+//        }).collect(Collectors.toSet());
+//        outfit.setKichThuocTrangPhucs(outfitSize);
+        // xem hàm setOutfitSize() bên dưới
+        outfit.setKichThuocTrangPhucs(setOutfitSize(dto,outfit, kichThuocEntity));
+        // Kiểm tra xem có mảnh trang phục không và nó có bị rỗng không
+            if(dto.isHasPiece() && dto.getManhTrangPhucs().isEmpty()) {
+                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+            }
+            AtomicInteger index = new AtomicInteger(1);
+            outfit.getManhTrangPhucs().forEach(item->{
+                UpdateTrangPhucDTO mangTrangPhucDTO = dto.getManhTrangPhucs().get(index.get());
+                item.setId(id+index);
+                item.setTinhTrang(true);
+                item.setTheLoai(theLoai);
+                item.setTrangPhucChinh(outfit);
+                item.setKichThuocTrangPhucs(setOutfitSize(mangTrangPhucDTO,item, kichThuocEntity));
+                index.getAndIncrement();
+            });
         outfit.getHinhAnhs().forEach(item -> {
             item.setTrangPhuc(outfit);
         });
@@ -149,13 +166,33 @@ public class TrangPhucServiceImpl implements TrangPhucService {
                 .message("Add outfit successfully")
                 .build();
     }
+    @Transactional
+    private Set<KichThuoc_TrangPhuc> setOutfitSize(
+            UpdateTrangPhucDTO dto,
+            TrangPhuc outfit,
+            @Nullable List<KichThuoc> kichThuocEntity){
+        if(kichThuocEntity == null)
+            kichThuocEntity = kichThuocRepository.findAll();
+        // tạo 1 set KichThuoc_TrangPhuc cho outfit cần thêm
+        return kichThuocEntity.stream().map(kichThuoc -> {
+            KichThuocTrangPhucDTO dtoSize = dto.getKichThuocs().stream()
+                    .filter(item -> Objects.equals(item.getMaKichThuoc(), kichThuoc.getId())).findFirst().get();
+            return KichThuoc_TrangPhuc.builder()
+                    .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
+                    .trangPhuc(outfit)
+                    .kichThuoc(kichThuoc)
+                    .soLuong(dtoSize.getSoLuong())
+                    .build();
+        }).collect(Collectors.toSet());
+    }
 
-    private String generateOutfitID(Long theLoai, boolean phoiSan) {
+    private String generateOutfitID(Long theLoai, boolean hasPiece) {
         long current = System.currentTimeMillis();
-        int prefix = phoiSan ? 1 : 0;
+        int prefix = hasPiece ? 1 : 0;
         long currentTimeSeconds = Instant.now().getEpochSecond();
         return "TP" + prefix + theLoai + String.format("%05d", currentTimeSeconds % 100000);
     }
+
     @Override
     @Transactional
     public ResponseMessage updateOutfit(UpdateTrangPhucDTO dto) {
@@ -169,7 +206,6 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         if (!dto.getHinhAnhs().isEmpty()) {
             Set<HinhAnhTrangPhuc> currentImages = outfit.getHinhAnhs();
             Set<HinhAnhTrangPhuc> newImages = new HashSet<>();
-
             dto.getHinhAnhs().forEach(img -> {
                 HinhAnhTrangPhuc image = currentImages.stream()
                         .filter(ci -> ci.getHinhAnh().equals(img))
@@ -191,10 +227,10 @@ public class TrangPhucServiceImpl implements TrangPhucService {
             List<String> ktIds = dto.getKichThuocs().stream()
                     .map(KichThuocTrangPhucDTO::getMaKichThuoc)
                     .toList();
-            List<KichThuoc> kichThuocs = kichThuocRepository.getKichThuocByIds(ktIds);
+            List<KichThuoc> kichThuocEntity = kichThuocRepository.getKichThuocByIds(ktIds);
 
             dto.getKichThuocs().forEach(dtoSize -> {
-                KichThuoc kichThuoc = kichThuocs.stream()
+                KichThuoc kichThuoc = kichThuocEntity.stream()
                         .filter(kt -> kt.getId().equals(dtoSize.getMaKichThuoc()))
                         .findFirst()
                         .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
@@ -214,7 +250,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
 
             currentSizes.clear();
             currentSizes.addAll(newSizes);
-        }else  {
+        } else {
             outfit.getKichThuocTrangPhucs().clear();
         }
         trangPhucRepository.save(outfit);
@@ -227,12 +263,12 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     @Override
     @Transactional
     public ResponseMessage getAttentionOutfit(List<String> ids) {
-     List<TrangPhuc> trangPhucs = trangPhucRepository.findAllById(ids);
-    List<TrangPhucDTO> trangPhucDTOS = trangPhucs.stream().map(trangPhucMapper::convert).toList();
+        List<TrangPhuc> trangPhucs = trangPhucRepository.findAllById(ids);
+        List<TrangPhucDTO> trangPhucDTOS = trangPhucs.stream().map(trangPhucMapper::convert).toList();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Lock outfits successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("attentions_outfit", trangPhucDTOS);
                 }})
                 .build();
@@ -241,12 +277,12 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     @Override
     @Transactional
     public ResponseMessage getLastestOutfit(Pageable pageable) {
-    List<TrangPhuc> trangPhucs = trangPhucRepository.getLastestOutfit(pageable);
-    List<TrangPhucDTO> trangPhucDTOS = trangPhucs.stream().map(trangPhucMapper::convert).toList();
+        List<TrangPhuc> trangPhucs = trangPhucRepository.getLastestOutfit(pageable);
+        List<TrangPhucDTO> trangPhucDTOS = trangPhucs.stream().map(trangPhucMapper::convert).toList();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Lock outfits successfully")
-                .data(new HashMap<>(){{
+                .data(new HashMap<>() {{
                     put("lastest_outfit", trangPhucDTOS);
                 }})
                 .build();
@@ -254,8 +290,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') and " +
-            "hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL')")
+    @ManagerRequired
     public ResponseMessage lockTrangPhuc(List<String> ids) {
         List<TrangPhuc> trangPhuc = trangPhucRepository.findAllById(ids);
         trangPhuc.forEach(outfit -> outfit.setTinhTrang(false));
@@ -268,8 +303,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') and " +
-            "hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL')")
+    @ManagerRequired
     public ResponseMessage deleteTrangPhuc(List<String> ids) {
         trangPhucRepository.deleteAllById(ids);
         return ResponseMessage.builder()
@@ -280,8 +314,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') and " +
-            "hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL')")
+    @ManagerRequired
     public ResponseMessage deleteTrangPhuc(String id) {
         trangPhucRepository.deleteById(id);
         return ResponseMessage.builder()

@@ -10,6 +10,7 @@ import com.stu.dissertation.clothingshop.Enum.RedisKey;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class TheLoaiRedisServiceImpl implements TheLoaiRedisService{
     }
 
     @Override
+    @Async
     public void updateTheLoai(List<TheLoaiDTO> theLoai) {
         try {
             String theLoaiJSON = objectMapper.writeValueAsString(theLoai);

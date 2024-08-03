@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public interface TheLoaiMapper {
     TheLoaiMapper INSTANCE = Mappers.getMapper(TheLoaiMapper.class);
 
-    @Mapping(target = "khuyenMai", source = "khuyenMais", qualifiedByName = "checkKhuyenMai")
     @Mapping(target="children", source="children", qualifiedByName = "mapChildren")
     TheLoaiDTO convert(TheLoai theLoai);
     @Mapping(target = "khuyenMai", source = "khuyenMais", qualifiedByName = "getKhuyenMai")
@@ -31,10 +30,6 @@ public interface TheLoaiMapper {
                    .findFirst()
                    .orElse(null);
         }
-    @Named("checkKhuyenMai")
-    default boolean checkKhuyenMai(Set<KhuyenMai> khuyenMais){
-        return !khuyenMais.isEmpty();
-    }
     @Named("mapChildren")
     default List<TheLoaiDTO> mapChildren(List<TheLoai> children){
         if(children.isEmpty()) return null;

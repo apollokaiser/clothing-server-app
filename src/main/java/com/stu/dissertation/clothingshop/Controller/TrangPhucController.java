@@ -74,7 +74,7 @@ public class TrangPhucController {
     }
     @PostMapping("/them-trang-phuc")
     public ResponseEntity<?> addTrangPhuc(@RequestBody UpdateOutfit trangPhuc){
-        ResponseMessage response = trangPhucService.addTrangPhuc(trangPhuc);
+        ResponseMessage response = trangPhucService.addTrangPhuc(trangPhuc.trangPhuc());
         return new ResponseEntity<>(response,headers, OK);
     }
     @PostMapping("/ngung-cho-thue")

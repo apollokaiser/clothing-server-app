@@ -1,13 +1,12 @@
 package com.stu.dissertation.clothingshop.Cache.CacheService;
 
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.KeyScanOptions;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -27,6 +26,7 @@ public class BaseRedisServiceImpl implements BaseRedisService{
     public Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }
+
     @Override
     public void hashSet(String key, String field, Object value) {
         hashOperations.put(key, field, value);
@@ -55,6 +55,17 @@ public class BaseRedisServiceImpl implements BaseRedisService{
     }
 
     @Override
+    public List<Object> getByKeyPrefix(String keyPrefix) {
+        List<String> keys = scanKeys(keyPrefix + "*");
+        if(keys.isEmpty()) return null;
+        List<Object> objects = new ArrayList<>();
+        for (String key : keys) {
+            objects.add(get(key));
+        }
+        return objects;
+    }
+
+    @Override
     public Set<String> getFieldPrefixes(String key) {
         return hashOperations.entries(key).keySet();
     }
@@ -62,6 +73,13 @@ public class BaseRedisServiceImpl implements BaseRedisService{
     @Override
     public void delete(String key) {
         redisTemplate.delete(key);
+    }
+
+    @Override
+    public void delete(List<String> keys) {
+        for (String key : keys) {
+            redisTemplate.delete(key);
+        }
     }
 
     @Override
@@ -74,5 +92,17 @@ public class BaseRedisServiceImpl implements BaseRedisService{
         for (String field : fields) {
             hashOperations.delete(key, field);
         }
+    }
+    @Override
+    public  List<String> scanKeys(String pattern) {
+        List<String> keys = new ArrayList<>();
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(20).build();
+        try (var cursor = redisTemplate.executeWithStickyConnection(redisConnection ->
+                redisConnection.scan(options))) {
+            if(cursor != null) {
+            cursor.forEachRemaining(key -> keys.add(new String(key)));
+            }
+        }
+        return keys;
     }
 }

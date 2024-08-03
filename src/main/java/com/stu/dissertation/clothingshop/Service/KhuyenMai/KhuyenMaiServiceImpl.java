@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.Service.KhuyenMai;
 
+import com.stu.dissertation.clothingshop.Cache.CacheService.KhuyenMai.KhuyenMaiRedisService;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiDTO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiThanhToanDTO;
 import com.stu.dissertation.clothingshop.DTO.KhuyenMaiTheLoaiDTO;
@@ -35,6 +36,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
     private final KhuyenMaiMapper khuyenMaiMapper;
     private final KhuyenMaiRepository khuyenMaiRepository;
     private final TheLoaiRepository theLoaiRepository;
+    private final KhuyenMaiRedisService khuyenMaiRedisService;
     @Override
     @Transactional
     public ResponseMessage getKhuyenMaiThanhToan() {
@@ -151,18 +153,27 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
     @Override
     @Transactional
     public ResponseMessage getPromotionsCategory() {
-        long currentTime = Instant.now().getEpochSecond();
-        List<KhuyenMai> khuyenMais = khuyenMaiRepository
-                .getPromotionsCategory(currentTime);
-        List<KhuyenMaiTheLoaiDTO> khuyenMaisDTOs = khuyenMais.stream()
-                .map(khuyenMaiMapper::convertPromtionCategory).toList();
-        return ResponseMessage.builder()
+      ResponseMessage response =  ResponseMessage.builder()
                 .status(OK)
                 .message("get promotion categories successfully")
-                .data(new HashMap<>(){{
-                   put("theloai_promotions", khuyenMaisDTOs);
-                }})
                 .build();
+        List<KhuyenMaiTheLoaiDTO> promotions = khuyenMaiRedisService.getCategoryPromotions();
+        if(promotions == null) {
+            long currentTime = Instant.now().getEpochSecond();
+            List<KhuyenMai> khuyenMais = khuyenMaiRepository
+                    .getPromotionsCategory(currentTime);
+            List<KhuyenMaiTheLoaiDTO> khuyenMaisDTOs = khuyenMais.stream()
+                    .map(khuyenMaiMapper::convertPromtionCategory).toList();
+            khuyenMaiRedisService.addCategoryPromotions(khuyenMaisDTOs);
+            response.setData(new HashMap<>(){{
+                put("theloai_promotions", khuyenMaisDTOs);
+            }});
+        }else {
+            response.setData(new HashMap<>(){{
+                put("theloai_promotions", promotions);
+            }});
+        }
+        return response;
     }
 
     @Override

@@ -14,7 +14,7 @@ public interface TrangPhucService {
     ResponseMessage getTrangPhucDetails(String id);
     ResponseMessage getTrangPhucInCart(List<String> ids);
     ResponseMessage searchTrangPhuc(String search, Pageable pageable);
-    ResponseMessage addTrangPhuc(UpdateOutfit trangPhuc);
+    ResponseMessage addTrangPhuc(UpdateTrangPhucDTO trangPhuc);
     ResponseMessage lockTrangPhuc(List<String> ids);
     ResponseMessage deleteTrangPhuc(List<String> ids);
     ResponseMessage deleteTrangPhuc(String id);

@@ -10,6 +10,8 @@ public enum RedisKey {
     CART("cart:"),
     PRODUCT("product:"),
     SESIONS("session:"),
+    CATEGORY_PROMOTION("promotion:category:"),
+    INVALID_TOKEN("invalid_token"),
     CATEGORY("category:");
     private final String key;
     RedisKey(String key){

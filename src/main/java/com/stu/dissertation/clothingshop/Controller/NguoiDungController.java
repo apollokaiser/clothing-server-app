@@ -65,4 +65,9 @@ public class NguoiDungController {
         ResponseMessage response = donThueService.getOrder(uid);
         return new ResponseEntity<>(response, headers, OK);
     }
+    @GetMapping("/dang-xuat")
+    @ResponseStatus(value = OK, reason = "logout successfully")
+    public void logout(@RequestParam("token") String accessToken) {
+        nguoiDungService.logout(accessToken);
+    }
 }
