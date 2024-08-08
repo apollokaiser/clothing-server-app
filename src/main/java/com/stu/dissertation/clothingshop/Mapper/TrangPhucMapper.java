@@ -53,7 +53,7 @@ public interface TrangPhucMapper {
     }
     @Named("setHinhAnhs")
     default Set<HinhAnhTrangPhuc> setHinhAnhs(List<String> hinhAnhs){
-        if(hinhAnhs==null) return null;
+        if(hinhAnhs == null) return null;
         return hinhAnhs.stream().map(hinh -> HinhAnhTrangPhuc.builder()
               .hinhAnh(hinh)
               .build()).collect(Collectors.toSet());
@@ -65,6 +65,8 @@ public interface TrangPhucMapper {
     @Mapping(target = "theLoai", source = "theLoai.maLoai" )
     @Mapping(target="hinhAnhs", source = "hinhAnhs", qualifiedByName = "hinhAnhsToString")
     @Mapping(target = "kichThuocs", source = "kichThuocTrangPhucs", qualifiedByName = "convertKichThuocToDTO")
+    @Mapping(target="deleteManhTrangPhuc", ignore = true)
+    @Mapping(target = "deleteKichThuoc", ignore = true)
     UpdateTrangPhucDTO converToUpdateDTO(TrangPhuc trangPhuc);
 
     @Named("convertKichThuocToDTO")
@@ -86,6 +88,7 @@ public interface TrangPhucMapper {
     }
     @Named("convertManhTrangPhucs")
     default Set<TrangPhuc> convertManhTrangPhucs(List<UpdateTrangPhucDTO> dto){
+        if(dto==null) return null;
         return dto.stream().map(this::convert)
                .collect(Collectors.toSet());
     }

@@ -10,4 +10,6 @@ import lombok.Setter;
 public class KichThuocTrangPhucDTO {
     private String maKichThuoc;
     private Integer soLuong = null;
+    private Integer tonKho = null;
+    private Boolean trangThai = null;
 }

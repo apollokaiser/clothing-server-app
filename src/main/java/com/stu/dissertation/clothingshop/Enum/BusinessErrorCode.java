@@ -37,6 +37,7 @@ public enum BusinessErrorCode {
   DATA_INTERNAL_ERROR(5009, "Handling with data has some wrong"),
   CANNOT_DELETE_WITH_REFERENCE(5010, "Cannot delete entity with reference"),
   DUPLICATE_DATA(5011, "Duplicate data"),
+  DATA_NOT_ENOUGH(5012, "Data not enough"),
   NULL_DATA(5006, "Null data");
   private int code;
   private String message;

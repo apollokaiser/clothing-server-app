@@ -23,4 +23,6 @@ public class UpdateTrangPhucDTO {
     private List<String> hinhAnhs;
     private List<UpdateTrangPhucDTO> manhTrangPhucs;
     private List<KichThuocTrangPhucDTO> kichThuocs;
+    private List<String> deleteManhTrangPhuc;
+    private List<String> deleteKichThuoc;
 }

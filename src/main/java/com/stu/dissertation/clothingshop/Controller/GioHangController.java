@@ -1,6 +1,8 @@
 package com.stu.dissertation.clothingshop.Controller;
 
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
+import com.stu.dissertation.clothingshop.Payload.Request.Cart;
+import com.stu.dissertation.clothingshop.Payload.Request.CartID;
 import com.stu.dissertation.clothingshop.Payload.Request.UpDateCartRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.UpdateCart;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.text.ParseException;
 
+import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
@@ -56,5 +59,10 @@ public class GioHangController {
     @ResponseStatus(OK)
     public void updateCart(@RequestBody UpdateCart cart) throws ParseException {
         gioHangService.updateCart(cart.oldItem(), cart.newItem());
+    }
+    @PostMapping("/v2/prepared-order")
+    @ResponseStatus(value=ACCEPTED, reason = "No unexpected ! Next step can continue")
+    public void preparedOrder(@RequestBody @Valid Cart cart) {
+        gioHangService.prepareOrder(cart);
     }
 }

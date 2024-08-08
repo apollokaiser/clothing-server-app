@@ -4,10 +4,19 @@ import com.stu.dissertation.clothingshop.Cache.CacheService.GioHang.GioHangRedis
 import com.stu.dissertation.clothingshop.DAO.TrangPhuc.TrangPhucDAO;
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
 import com.stu.dissertation.clothingshop.DTO.OutfitCartDTO;
+import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
+import com.stu.dissertation.clothingshop.Entities.KichThuoc_TrangPhuc;
+import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Payload.Request.Cart;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
+import com.stu.dissertation.clothingshop.Repositories.DonThueRepository;
+import com.stu.dissertation.clothingshop.Repositories.KichThuocTrangPhucRepository;
+import com.stu.dissertation.clothingshop.Repositories.TrangPhucRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
+import com.stu.dissertation.clothingshop.Service.DonThue.DonThueService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.Authentication;
@@ -18,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.OK;
 
@@ -28,7 +38,8 @@ public class GioHangServiceImpl_v2 implements GioHangService {
     private final TrangPhucDAO trangPhucDAO;
     private final GioHangRedisService gioHangRedisService;
     private final JWTService jwtService;
-
+    private  final KichThuocTrangPhucRepository kichThuocTrangPhucRepository;
+    private final GioHangScheduler gioHangScheduler;
     private String getId() throws ParseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         JwtAuthenticationToken oauthToken = (JwtAuthenticationToken) authentication;
@@ -75,5 +86,28 @@ public class GioHangServiceImpl_v2 implements GioHangService {
     @Override
     public void updateCart(GioHangDTO oldItem, GioHangDTO newItem) throws ParseException {
         gioHangRedisService.updateCart(getId(), oldItem, newItem);
+    }
+    @Override
+    @Transactional
+    public void prepareOrder(Cart cart) {
+        List<TrangPhuc_KichThuocKey> ids = cart.carts().stream().map(item -> new TrangPhuc_KichThuocKey(item.getId(), item.getSize())).toList();
+        List< KichThuoc_TrangPhuc > trangPhucs = kichThuocTrangPhucRepository.findAllById(ids);
+        for (KichThuoc_TrangPhuc trangPhuc : trangPhucs) {
+            if(trangPhuc.getSoLuong() == 0 || !trangPhuc.getTrangThai()) {
+                throw new ApplicationException(BusinessErrorCode.DATA_NOT_ENOUGH, "TrangPhuc is not enough to order");
+            }
+            TrangPhuc_KichThuocKey key = trangPhuc.getId();
+            Optional<GioHangDTO> gioHang = cart.carts().stream()
+                    .filter(item-> item.getId().equals(key.getMaTrangPhuc()) && item.getSize().equals(key.getMaKichThuoc()))
+                    .findFirst();
+            if (gioHang.isPresent()) {
+                if (trangPhuc.getSoLuong() < gioHang.get().getQuantity()) {
+                    throw new ApplicationException(BusinessErrorCode.DATA_NOT_ENOUGH, "TrangPhuc is not enough to order");
+                }
+                trangPhuc.setSoLuong(trangPhuc.getSoLuong() - gioHang.get().getQuantity());
+            }
+        }
+        kichThuocTrangPhucRepository.saveAll(trangPhucs);
+        gioHangScheduler.scheduleOutfitRestoration(cart);
     }
 }

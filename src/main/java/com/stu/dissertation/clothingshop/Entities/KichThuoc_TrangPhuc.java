@@ -27,8 +27,12 @@ public class KichThuoc_TrangPhuc {
     @JoinColumn(name = "ma_kich_thuoc")
     @JsonIgnore
     private KichThuoc kichThuoc;
-    @Column(name="so_luong")
+    @Column(name="so_luong", columnDefinition = "INT NOT NULL DEFAULT 0")
     private Integer soLuong;
+    @Column(name="ton_kho", columnDefinition = "INT NOT NULL DEFAULT 0")
+    private Integer tonKho;
+    @Column(name="trang_thai", columnDefinition = "TINYINT(1) NOT NULL DEFAULT 1")
+    private Boolean trangThai = true;
     @OneToMany(mappedBy="outfitSize")
     @JsonIgnore
     private Set<NguoiDung_GioHang> gioHangs;

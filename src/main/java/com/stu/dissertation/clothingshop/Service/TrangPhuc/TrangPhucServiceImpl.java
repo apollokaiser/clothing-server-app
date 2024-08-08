@@ -5,6 +5,7 @@ import com.stu.dissertation.clothingshop.DTO.*;
 import com.stu.dissertation.clothingshop.Entities.*;
 import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
+import com.stu.dissertation.clothingshop.Enum.SIZE;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Mapper.TrangPhucMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
@@ -13,10 +14,10 @@ import com.stu.dissertation.clothingshop.Repositories.KichThuocRepository;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import com.stu.dissertation.clothingshop.Repositories.TrangPhucRepository;
 import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.ManagerRequired;
-import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -122,7 +123,8 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         TrangPhuc outfit = trangPhucMapper.convert(dto);
         String id = generateOutfitID(dto.getTheLoai(), outfit.isHasPiece());
         outfit.setId(id);
-        TheLoai theLoai = theLoaiRepository.getReferenceById(dto.getTheLoai());
+        TheLoai theLoai = theLoaiRepository.findById(dto.getTheLoai())
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         outfit.setTheLoai(theLoai);
         outfit.setTinhTrang(true);
         List<KichThuoc> kichThuocEntity = kichThuocRepository.findAll();
@@ -142,55 +144,116 @@ public class TrangPhucServiceImpl implements TrangPhucService {
 //        }).collect(Collectors.toSet());
 //        outfit.setKichThuocTrangPhucs(outfitSize);
         // xem hàm setOutfitSize() bên dưới
-        outfit.setKichThuocTrangPhucs(setOutfitSize(dto,outfit, kichThuocEntity));
-        // Kiểm tra xem có mảnh trang phục không và nó có bị rỗng không
-            if(dto.isHasPiece() && dto.getManhTrangPhucs().isEmpty()) {
-                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
-            }
-            AtomicInteger index = new AtomicInteger(1);
-            outfit.getManhTrangPhucs().forEach(item->{
-                UpdateTrangPhucDTO mangTrangPhucDTO = dto.getManhTrangPhucs().get(index.get());
-                item.setId(id+index);
-                item.setTinhTrang(true);
-                item.setTheLoai(theLoai);
-                item.setTrangPhucChinh(outfit);
-                item.setKichThuocTrangPhucs(setOutfitSize(mangTrangPhucDTO,item, kichThuocEntity));
-                index.getAndIncrement();
-            });
-        outfit.getHinhAnhs().forEach(item -> {
-            item.setTrangPhuc(outfit);
+        outfit.setKichThuocTrangPhucs(setOutfitSize(dto, outfit, kichThuocEntity));
+        if (dto.isHasPiece() && dto.getManhTrangPhucs().isEmpty()) {
+            throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+        }
+        AtomicInteger index = new AtomicInteger(0);
+        outfit.getManhTrangPhucs().forEach(item -> {
+            UpdateTrangPhucDTO mangTrangPhucDTO = dto.getManhTrangPhucs().get(index.get());
+            item.setId(id + index);
+            item.setTinhTrang(true);
+            item.setTheLoai(theLoai);
+            item.setTrangPhucChinh(outfit);
+            item.setKichThuocTrangPhucs(setOutfitSize(mangTrangPhucDTO, item, kichThuocEntity));
+            index.getAndIncrement();
         });
+        for (HinhAnhTrangPhuc item : outfit.getHinhAnhs()) item.setTrangPhuc(outfit);
         trangPhucRepository.save(outfit);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Add outfit successfully")
                 .build();
     }
+
     @Transactional
     private Set<KichThuoc_TrangPhuc> setOutfitSize(
             UpdateTrangPhucDTO dto,
             TrangPhuc outfit,
-            @Nullable List<KichThuoc> kichThuocEntity){
-        if(kichThuocEntity == null)
-            kichThuocEntity = kichThuocRepository.findAll();
-        // tạo 1 set KichThuoc_TrangPhuc cho outfit cần thêm
-        return kichThuocEntity.stream().map(kichThuoc -> {
-            KichThuocTrangPhucDTO dtoSize = dto.getKichThuocs().stream()
-                    .filter(item -> Objects.equals(item.getMaKichThuoc(), kichThuoc.getId())).findFirst().get();
+            @NonNull List<KichThuoc> kichThuocEntity) {
+        if (outfit.getTheLoai().getForAccessary() != null && outfit.getTheLoai().getForAccessary()) {
+            if (dto.getKichThuocs().size() != 1)
+                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+        }
+        return dto.getKichThuocs().stream().map(dtoSize -> {
+            Optional<KichThuoc> kichThuoc = kichThuocEntity.stream()
+                    .filter(item -> Objects.equals(item.getId(), dtoSize.getMaKichThuoc())).findFirst();
+            if (kichThuoc.isEmpty()) throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
             return KichThuoc_TrangPhuc.builder()
-                    .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
+                    .id(new TrangPhuc_KichThuocKey(outfit.getId(), dtoSize.getMaKichThuoc()))
                     .trangPhuc(outfit)
-                    .kichThuoc(kichThuoc)
-                    .soLuong(dtoSize.getSoLuong())
+                    .kichThuoc(kichThuoc.get())
+                    .tonKho(dtoSize.getTonKho())
+                    .soLuong(dtoSize.getTonKho())
+                    .trangThai(true)
                     .build();
         }).collect(Collectors.toSet());
     }
 
+    @Transactional
+    private void updateOutfitSize(
+            UpdateTrangPhucDTO dto,
+            TrangPhuc outfit,
+            @NonNull List<KichThuoc> kichThuocEntity) {
+        if (outfit.getTheLoai().getForAccessary() != null && outfit.getTheLoai().getForAccessary()) {
+            if (dto.getKichThuocs().size() != 1)
+                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+        }
+        dto.getKichThuocs().forEach(dtoSize -> {
+            Optional<KichThuoc> kichThuoc = kichThuocEntity.stream()
+                    .filter(item -> Objects.equals(item.getId(), dtoSize.getMaKichThuoc())).findFirst();
+            if (kichThuoc.isEmpty()) throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+            boolean isNew = true;
+            for (KichThuoc_TrangPhuc size : outfit.getKichThuocTrangPhucs()) {
+                if (size.getKichThuoc().getId().equals(kichThuoc.get().getId())) {
+                    //chỉ cho phép thay đổi khi sản phẩm đã thu hồi hết
+                    if (dtoSize.getTonKho() < size.getTonKho()) {
+                        //nếu chưa thu hồi hết
+                        if (!Objects.equals(size.getSoLuong(), size.getTonKho())) {
+                            throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+                        } else {
+                            size.setTonKho(dtoSize.getTonKho());
+                            size.setSoLuong(dtoSize.getTonKho());
+                        }
+                    } else {
+                        // số lượng cho phép thuê sẽ = số lượng mới - số lượng cũ + số còn lại
+                        size.setSoLuong(dtoSize.getTonKho() - size.getTonKho() + size.getSoLuong());
+                        size.setTonKho(dtoSize.getTonKho());
+                    }
+                    size.setTrangThai(true);
+                    isNew = false;
+                    break;
+                }
+            }
+            if (isNew) {
+                KichThuoc_TrangPhuc size = KichThuoc_TrangPhuc.builder()
+                        .id(new TrangPhuc_KichThuocKey(outfit.getId(), kichThuoc.get().getId()))
+                        .trangPhuc(outfit)
+                        .kichThuoc(kichThuoc.get())
+                        .tonKho(dtoSize.getTonKho())
+                        .soLuong(dtoSize.getTonKho())
+                        .trangThai(true)
+                        .build();
+                outfit.getKichThuocTrangPhucs().add(size);
+            }
+        });
+        if (!dto.getDeleteKichThuoc().isEmpty()) deleteOutfitSize(dto.getDeleteKichThuoc(), outfit);
+    }
+
     private String generateOutfitID(Long theLoai, boolean hasPiece) {
-        long current = System.currentTimeMillis();
         int prefix = hasPiece ? 1 : 0;
         long currentTimeSeconds = Instant.now().getEpochSecond();
         return "TP" + prefix + theLoai + String.format("%05d", currentTimeSeconds % 100000);
+    }
+
+    @Transactional
+    private void deleteOutfitSize(List<String> kichThuocs, TrangPhuc outfit) {
+        kichThuocs.forEach(size -> {
+            outfit.getKichThuocTrangPhucs().stream()
+                    .filter(kichThuoc -> kichThuoc.getId().getMaKichThuoc().equals(size))
+                    .findFirst().orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND))
+                    .setTrangThai(false);
+        });
     }
 
     @Override
@@ -199,10 +262,16 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         TrangPhuc outfit = trangPhucRepository.findById(dto.getId())
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         trangPhucMapper.updateEntityFromDto(dto, outfit);
+        //Kiểm tra xem có thêm 1 danh mục mới không
         if (!dto.getTheLoai().equals(outfit.getTheLoai().getMaLoai())) {
-            TheLoai theLoai = theLoaiRepository.getReferenceById(dto.getTheLoai());
+            TheLoai theLoai = theLoaiRepository.findById(dto.getTheLoai())
+                    .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+            // Không thể chuyển 1 trang phục chứa các mảnh trang phục thành đạo cụ được
+            if (outfit.isHasPiece() && theLoai.getForAccessary() != null && theLoai.getForAccessary())
+                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE, "Cannot set accessary category for multiple skins");
             outfit.setTheLoai(theLoai);
         }
+        //Kiểm tra có thay đổi hình ảnh không
         if (!dto.getHinhAnhs().isEmpty()) {
             Set<HinhAnhTrangPhuc> currentImages = outfit.getHinhAnhs();
             Set<HinhAnhTrangPhuc> newImages = new HashSet<>();
@@ -216,44 +285,139 @@ public class TrangPhucServiceImpl implements TrangPhucService {
                                 .build());
                 newImages.add(image);
             });
-
             currentImages.clear();
             currentImages.addAll(newImages);
+            outfit.setHinhAnhs(currentImages);
         }
-        if (!dto.getKichThuocs().isEmpty()) {
+        if (!dto.getDeleteKichThuoc().isEmpty())
+            deleteOutfitSize(dto.getDeleteKichThuoc(), outfit);
+        // nếu không có thay đổi thì kích thước sẽ không được request lên
+        List<KichThuoc> kichThuocEntity = kichThuocRepository.findAll();
+        if (dto.getKichThuocs() != null && !dto.getKichThuocs().isEmpty()) {
+            // nếu lúc đầu mà trang phục không có mảnh trang phục mà muốn tách ra làm mảnh trang phục
+            // xử lý này nằm trong   if (!dto.getKichThuocs().isEmpty()) là hợp lý
+            // vì khi chuyển đổi thì kich thước sẽ bị đổi là NONE,
+            // xử lý trên sẽ được kích hoạt
+            //TODO:KIỂM TRA LOGIC NÀY DƯỜNG NHƯ SẼ KHÔNG CHẠY
+//            if (!outfit.isHasPiece() && !dto.getManhTrangPhucs().isEmpty()) {
+//                outfit.setHasPiece(true);
+//                Set<TrangPhuc> manhTrangPhucs = dto.getManhTrangPhucs().stream().map(trangPhucMapper::convert).collect(Collectors.toSet());
+//                outfit.setManhTrangPhucs(manhTrangPhucs);
+//                List<String> thisSize = outfit.getKichThuocTrangPhucs().stream()
+//                        .map(item -> item.getId().getMaKichThuoc())
+//                        .toList();
+//                deleteOutfitSize(thisSize, outfit);
+//                AtomicInteger index = new AtomicInteger(0);
+//                outfit.getManhTrangPhucs().forEach(item -> {
+//                    UpdateTrangPhucDTO mangTrangPhucDTO = dto.getManhTrangPhucs().get(index.get());
+//                    item.setId(outfit.getId() + index.get());
+//                    item.setTinhTrang(true);
+//                    item.setTheLoai(outfit.getTheLoai());
+//                    item.setTrangPhucChinh(outfit);
+//                    item.setKichThuocTrangPhucs(setOutfitSize(mangTrangPhucDTO, item, kichThuocEntity));
+//                    index.getAndIncrement();
+//                });
+//            }
+            //kích thước đang có của outfit muốn update
             Set<KichThuoc_TrangPhuc> currentSizes = outfit.getKichThuocTrangPhucs();
             Set<KichThuoc_TrangPhuc> newSizes = new HashSet<>();
-
-            List<String> ktIds = dto.getKichThuocs().stream()
-                    .map(KichThuocTrangPhucDTO::getMaKichThuoc)
-                    .toList();
-            List<KichThuoc> kichThuocEntity = kichThuocRepository.getKichThuocByIds(ktIds);
-
+            // Lấy danh sách kích thước mà request lên server
+            //request db để lấy entity kichThuoc
             dto.getKichThuocs().forEach(dtoSize -> {
                 KichThuoc kichThuoc = kichThuocEntity.stream()
                         .filter(kt -> kt.getId().equals(dtoSize.getMaKichThuoc()))
                         .findFirst()
                         .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
-
                 KichThuoc_TrangPhuc size = currentSizes.stream()
                         .filter(cs -> cs.getKichThuoc().equals(kichThuoc))
                         .findFirst()
                         .orElse(KichThuoc_TrangPhuc.builder()
-                                .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
+                                .id(new TrangPhuc_KichThuocKey(outfit.getId(), kichThuoc.getId()))
                                 .kichThuoc(kichThuoc)
                                 .trangPhuc(outfit)
+                                .tonKho(dtoSize.getTonKho())
+                                .trangThai(true)
                                 .build());
-
-                size.setSoLuong(dtoSize.getSoLuong());
+                if (size.getSoLuong() != null) {
+                    if (dtoSize.getTonKho() < size.getTonKho() && size.getSoLuong() < size.getTonKho()) {
+                        throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE, "Cannot decrease the number of items in stock");
+                    } else {
+                        size.setSoLuong(dtoSize.getTonKho() - size.getTonKho() + size.getSoLuong());
+                        size.setTonKho(dtoSize.getTonKho());
+                    }
+                } else
+                    size.setSoLuong(dtoSize.getTonKho());
                 newSizes.add(size);
             });
-
-            currentSizes.clear();
-            currentSizes.addAll(newSizes);
-        } else {
-            outfit.getKichThuocTrangPhucs().clear();
+            outfit.getKichThuocTrangPhucs().addAll(newSizes);
+            // Nếu muốn biến trang phục có chứa mảnh trang phục sang trang phục cả bộ thì xóa hết phần tp
         }
-        trangPhucRepository.save(outfit);
+        //Từ trang thái có mảnh, sang xóa hết mảnh thì enabled lại các kích thước
+        if (!outfit.isHasPiece() && outfit.getManhTrangPhucs() != null && !outfit.getManhTrangPhucs().isEmpty()) {
+            outfit.getKichThuocTrangPhucs().forEach(kichThuoc -> {
+                if (!kichThuoc.getTrangThai() && !kichThuoc.getId().getMaKichThuoc().equals(SIZE.NONE.name())) {
+                    kichThuoc.setTrangThai(true);
+                } else {
+                    // còn NONE thì set lại false
+                    kichThuoc.setTrangThai(false);
+                }
+            });
+//            outfit.setHasPiece(false);
+//            outfit.getManhTrangPhucs().forEach(item -> {
+//                item.setTinhTrang(false);
+//            });
+        }
+        // Nếu phần trang phục muốn chỉnh sửa
+        // không sửa gì thì sẽ empty
+        if (outfit.isHasPiece() && !dto.getManhTrangPhucs().isEmpty()) {
+            AtomicInteger index = new AtomicInteger(0);
+            Set<TrangPhuc> updateOutfit = new HashSet<>();
+            //các kích thước cũ phải chuyển trạng thái (logic này khả dụng nếu từ bô sang mảnh trang phục)
+            // chỉ dùng cho các kích thước đang trạng thái true (hiểu đơn giản là lần đầu thay đổi logic này sẽ chạy)
+            // và trừ kích thước NONE ra vì nếu chuyển sang mảnh trang phục thì NONE này không thể có status false được
+            List<String> thisSize = outfit.getKichThuocTrangPhucs().stream()
+                    .filter(kichThuoc ->
+                            kichThuoc.getTrangThai() && !kichThuoc.getId().getMaKichThuoc().equals(SIZE.NONE.name()))
+                    .map(item -> item.getId().getMaKichThuoc())
+                    .toList();
+            deleteOutfitSize(thisSize, outfit);
+            dto.getManhTrangPhucs().forEach(skin -> {
+                TrangPhuc manhTrangPhuc = outfit.getManhTrangPhucs().stream()
+                        .filter(item -> item.getId().equals(skin.getId()))
+                        .findFirst()
+                        .orElseGet(() -> TrangPhuc.builder()
+                                .id(outfit.getId() + "U" + index.get())
+                                .trangPhucChinh((outfit))
+                                .theLoai(outfit.getTheLoai())
+                                .tenTrangPhuc(skin.getTenTrangPhuc())
+                                .giaTien(skin.getGiaTien())
+                                .hasPiece(false)
+                                .tinhTrang(true)
+                                .build());
+                manhTrangPhuc.setTenTrangPhuc(skin.getTenTrangPhuc());
+                manhTrangPhuc.setGiaTien(skin.getGiaTien());
+                if (manhTrangPhuc.getKichThuocTrangPhucs() == null) {
+                    manhTrangPhuc.setKichThuocTrangPhucs(setOutfitSize(skin, manhTrangPhuc, kichThuocEntity));
+                    updateOutfit.add(manhTrangPhuc);
+                } else {
+                    //trường hợp này tức là nó có rồi, chỉ là cập nhật lại số lượng gì đó thôi
+                    if (!Objects.equals(manhTrangPhuc.getTheLoai().getMaLoai(), outfit.getTheLoai().getMaLoai()))
+                        manhTrangPhuc.setTheLoai(outfit.getTheLoai());
+                    updateOutfitSize(skin, manhTrangPhuc, kichThuocEntity);
+                }
+                index.getAndIncrement();
+            });
+            outfit.getManhTrangPhucs().addAll(updateOutfit);
+        }
+        if (dto.getDeleteManhTrangPhuc() != null && !dto.getDeleteManhTrangPhuc().isEmpty()) {
+            dto.getDeleteManhTrangPhuc().forEach(deleteOutfit -> {
+                if (outfit.getManhTrangPhucs() != null)
+                    outfit.getManhTrangPhucs().stream().filter(manh -> manh.getId().equals(deleteOutfit)).findFirst()
+                            .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND))
+                            .setTinhTrang(false);
+            });
+        }
+        TrangPhuc temp = trangPhucRepository.save(outfit);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Updated outfit successfully")

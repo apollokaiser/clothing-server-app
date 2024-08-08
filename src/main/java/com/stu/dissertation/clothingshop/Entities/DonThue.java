@@ -39,6 +39,8 @@ public class DonThue extends BaseEntity{
     private BigDecimal tongThue;
     @Enumerated(EnumType.STRING)
     private PaymentMethod payment;
+    @Column(name="the_chan", columnDefinition = "DECIMAL(10,2) DEFAULT 0")
+    private BigDecimal theChan;
     @ManyToOne
     @JoinColumn(name = "ma_trang_thai",
             referencedColumnName = "ma_trang_thai",

@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.Controller;
 
+import com.stu.dissertation.clothingshop.DTO.UpdateTrangPhucDTO;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
 import com.stu.dissertation.clothingshop.Payload.Request.DeleteOutfit;
 import com.stu.dissertation.clothingshop.Payload.Request.UpdateOutfit;
@@ -73,8 +74,8 @@ public class TrangPhucController {
         return new ResponseEntity<>(response,headers, OK);
     }
     @PostMapping("/them-trang-phuc")
-    public ResponseEntity<?> addTrangPhuc(@RequestBody UpdateOutfit trangPhuc){
-        ResponseMessage response = trangPhucService.addTrangPhuc(trangPhuc.trangPhuc());
+    public ResponseEntity<?> addTrangPhuc(@RequestBody @Valid UpdateTrangPhucDTO trangPhuc){
+        ResponseMessage response = trangPhucService.addTrangPhuc(trangPhuc);
         return new ResponseEntity<>(response,headers, OK);
     }
     @PostMapping("/ngung-cho-thue")
@@ -98,8 +99,8 @@ public class TrangPhucController {
         return new ResponseEntity<>(response,headers, OK);
     }
     @PutMapping("/cap-nhat-trang-phuc")
-    public ResponseEntity<?> updateTrangPhuc(@RequestBody UpdateOutfit trangPhuc){
-        ResponseMessage response = trangPhucService.updateOutfit(trangPhuc.trangPhuc());
+    public ResponseEntity<?> updateTrangPhuc(@RequestBody UpdateTrangPhucDTO trangPhuc){
+        ResponseMessage response = trangPhucService.updateOutfit(trangPhuc);
         return new ResponseEntity<>(response,headers, OK);
     }
 }

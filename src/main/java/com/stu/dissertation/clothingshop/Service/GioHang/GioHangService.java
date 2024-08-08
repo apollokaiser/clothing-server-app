@@ -1,6 +1,7 @@
 package com.stu.dissertation.clothingshop.Service.GioHang;
 
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
+import com.stu.dissertation.clothingshop.Payload.Request.Cart;
 import com.stu.dissertation.clothingshop.Payload.Request.UpDateCartRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 
@@ -31,4 +32,8 @@ public interface GioHangService {
    default void deleteCart( List<GioHangDTO> gioHangDTOs) throws ParseException {
        System.out.println("METHOD DEFAULT: ");
    }
+
+    default void prepareOrder(Cart cart) {
+
+    }
 }

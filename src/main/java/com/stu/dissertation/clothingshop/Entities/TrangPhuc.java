@@ -49,29 +49,17 @@ public class TrangPhuc extends BaseEntity {
     @JoinColumn(name = "ma_trang_phuc_chinh", referencedColumnName = "ma_trang_phuc")
     @JsonIgnore
     private TrangPhuc trangPhucChinh;
-    @OneToMany(mappedBy = "trangPhucChinh", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "trangPhucChinh", cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonIgnore
     private Set<TrangPhuc> manhTrangPhucs;
     @OneToMany(mappedBy = "trangPhucChinh", cascade = CascadeType.REMOVE)
     @JsonIgnore
     private Set<NguoiDung_GioHang> gioHangs;
 
-    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.ALL, fetch = FetchType.LAZY,orphanRemoval = true)
-    @Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
+    @OneToMany(mappedBy = "trangPhuc", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private Set<KichThuoc_TrangPhuc> kichThuocTrangPhucs;
 
     @OneToMany(mappedBy = "trangPhucChinh")
     @JsonIgnore
     private Set<ChiTietDonThue> chiTietDonThues;
-    @PrePersist
-    @PreUpdate
-    public void checkAccessaryItem() {
-        if(theLoai.getForAccessary()) {
-            KichThuoc_TrangPhuc kichThuocTrangPhuc = kichThuocTrangPhucs.iterator().next();
-            //NOTE: Kiểm tra xem đạo cụ có phải là có kích thước là none không
-            if(!Objects.equals(kichThuocTrangPhuc.getKichThuoc().getId(), SIZE.NONE.name()) && kichThuocTrangPhucs.size()!=1) {
-                throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE, "Accessary item must set size that is none");
-            }
-        }
-    }
 }
