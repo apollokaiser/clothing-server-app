@@ -12,11 +12,16 @@ import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationEx
 import com.stu.dissertation.clothingshop.Mapper.ChiTietDonThueMapper;
 import com.stu.dissertation.clothingshop.Mapper.DonThueMapper;
 import com.stu.dissertation.clothingshop.Mapper.PhieuHoanTraMapper;
+import com.stu.dissertation.clothingshop.Payload.Request.Cart;
 import com.stu.dissertation.clothingshop.Payload.Request.DatCocRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.OrderRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.*;
+import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.AdminRequired;
 import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.ManagerRequired;
+import com.stu.dissertation.clothingshop.Service.GioHang.GioHangScheduler;
+import com.stu.dissertation.clothingshop.Utils.RandomCodeGenerator;
+import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
@@ -44,13 +49,18 @@ public class DonThueServiceImpl implements DonThueService {
     private final ChiTietDonThueMapper chiTietDonThueMapper;
     private final DonThueMapper donThueMapper;
     private final GioHangRedisService gioHangRedisService;
-
+    private final GioHangScheduler gioHangScheduler;
     @Override
     @Transactional
     public ResponseMessage saveOrder(OrderRequest req) {
-        DonThueDTO donThue = req.order();
+        DonThueDTO donThue = req.getOrder();
+//        Cart prepareOrder = gioHangRedisService.getPreOrder(req.getOrder().getNguoiDung());
+//        if(prepareOrder==null) {
+//            throw new ApplicationException(BusinessErrorCode.PROCESSING_ERROR, "Order has destroyed by another processing");
+//        }
+        gioHangRedisService.clearPreOrder(req.getOrder().getNguoiDung());
         DonThue order = donThueMapper.convert(donThue);
-        order.setMaDonThue(UUID.randomUUID().toString());
+        order.setMaDonThue(RandomCodeGenerator.generateOrderCode());
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!email.isEmpty()) {
             NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
@@ -58,10 +68,25 @@ public class DonThueServiceImpl implements DonThueService {
             if (!Objects.equals(nguoiDung.getId(), donThue.getNguoiDung()))
                 throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
             order.setNguoiDung(nguoiDung);
-            return save(order, donThue, nguoiDung.getId());
+            return save(order, donThue, nguoiDung.getId(), null);
         } else {
             throw new ApplicationException(BusinessErrorCode.USER_NOT_FOUND);
         }
+    }
+
+    @Override
+    @Transactional
+    public void saveOrder(OrderRequest req, String orderId, String uid, DatCoc datCoc) {
+        DonThueDTO donThue = req.getOrder();
+        DonThue order = donThueMapper.convert(donThue);
+        order.setMaDonThue(orderId);
+        if(!Objects.equals(uid, donThue.getNguoiDung())) {
+            throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+        }
+        NguoiDung nguoiDung = nguoiDungRepository.findById(uid)
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+        order.setNguoiDung(nguoiDung);
+        save(order, donThue, uid, datCoc);
     }
 
     @Transactional
@@ -81,16 +106,22 @@ public class DonThueServiceImpl implements DonThueService {
     @Override
     @Transactional
     public ResponseMessage saveOrderWithoutAccount(OrderRequest req, String sessionCode) {
-        DonThueDTO donThue = req.order();
+        DonThueDTO donThue = req.getOrder();
         DonThue order = donThueMapper.convert(donThue);
         order.setMaDonThue(UUID.randomUUID().toString());
-        return save(order, donThue, sessionCode);
+        return save(order, donThue, sessionCode, null);
     }
 
     @Transactional
-    private ResponseMessage save(DonThue order, DonThueDTO donThue, String id) {
-        TrangThai trangThai = trangThaiRepository.findById(1L)
-                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
+    private ResponseMessage save (DonThue order, DonThueDTO donThue, String id, @Nullable DatCoc datCoc){
+        TrangThai trangThai;
+        if(datCoc!= null) {
+            trangThai = trangThaiRepository.findById(2L)
+                    .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
+        } else {
+            trangThai = trangThaiRepository.findById(1L)
+                    .orElseThrow(() -> new ApplicationException(BusinessErrorCode.INTERNAL_ERROR));
+        }
         order.setTrangThai(trangThai);
         if (!donThue.getPhieuKhuyenMai().isEmpty()) {
             PhieuKhuyenMai phieuKhuyenMai = phieuKhuyenMaiRepository.findById(donThue.getPhieuKhuyenMai())
@@ -123,8 +154,14 @@ public class DonThueServiceImpl implements DonThueService {
         order.setChiTietDonThues(chiTiet);
         order.setPayment(PaymentMethod.valueOf(donThue.getPayment()));
         order.setNgayThue(Instant.now().getEpochSecond());
+        if (datCoc!= null) {
+            datCoc.setDonThue(order);
+            order.setDatCoc(datCoc);
+            order.setPayment(PaymentMethod.ONLINE);
+        }
         donThueRepository.save(order);
         gioHangRedisService.deleteCarts(id, gioHangDTOS);
+        gioHangScheduler.cancelScheduledRestoration(order.getNguoiDung().getId());
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Order has been created successfully")
@@ -176,6 +213,9 @@ public class DonThueServiceImpl implements DonThueService {
     public ResponseMessage addDeposit(DatCocRequest datCocRequest) {
         DonThue donThue = donThueRepository.findById(datCocRequest.maDonThue())
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        donThue.setTheChan(datCocRequest.theChan());
+        TrangThai trangThai = trangThaiRepository.findById(2L).orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        donThue.setTrangThai(trangThai);
         DatCoc datCoc = DatCoc.builder()
                 .payment(PaymentMethod.valueOf(datCocRequest.payment()))
                 .ngayCoc(Instant.now().getEpochSecond())
@@ -183,6 +223,7 @@ public class DonThueServiceImpl implements DonThueService {
                 .donThue(donThue)
                 .trangThai(PaymentStatus.valueOf(datCocRequest.trangThai()))
                 .build();
+        donThueRepository.save(donThue);
         datCocRepository.save(datCoc);
         return ResponseMessage.builder()
                 .status(OK)
@@ -230,6 +271,66 @@ public class DonThueServiceImpl implements DonThueService {
                 .data(new HashMap<>() {{
                     put("order_detail", donThueDTO);
                 }})
+                .build();
+    }
+
+    @Override
+    @AdminRequired
+    @Transactional
+    public ResponseMessage searchOrders(String keyword) {
+        List<DonThue> donThues = donThueRepository.searchOrder(keyword);
+        List<DonThuePreviewDTO> donThueDTO = donThues.stream().map(donThueMapper::convertPreview).toList();
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Search order successfully")
+                .data(new HashMap<>(){{
+                    put("orders", donThueDTO);
+                }})
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage changeDate(Long date, String orderId) {
+        DonThue donThue = donThueRepository.findById(orderId)
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND, "Order not found"));
+        long thisTime = Instant.now().getEpochSecond();
+        if(thisTime > date) {
+            throw new ApplicationException(BusinessErrorCode.INVALID_DATE, "Date must be greater than current time");
+        }
+        donThue.setNgayThue(date);
+        donThueRepository.save(donThue);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Change date successfully")
+                .build();
+    }
+
+    @Override
+    @AdminRequired
+    @Transactional
+    public ResponseMessage updateTheChan(String id, long theChan) {
+        DonThue donThue = donThueRepository.findById(id)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND, "Order not found"));
+        donThue.setTheChan(BigDecimal.valueOf(theChan));
+        donThueRepository.save(donThue);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Update the chan successfully")
+                .build();
+    }
+
+    @Override
+    @Transactional
+    @AdminRequired
+    public ResponseMessage updateNgayNhan(String id, long datetime) {
+        DonThue donThue = donThueRepository.findById(id)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND, "Order not found"));
+        donThue.setNgayNhan(datetime);
+        donThueRepository.save(donThue);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Update ngay nhan successfully")
                 .build();
     }
 }

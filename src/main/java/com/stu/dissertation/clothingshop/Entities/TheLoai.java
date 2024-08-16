@@ -3,12 +3,12 @@ package com.stu.dissertation.clothingshop.Entities;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
+import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "theloai")
@@ -26,7 +26,7 @@ public class TheLoai extends BaseEntity{
     private String tenLoai;
     @Column(name="url",columnDefinition = "VARCHAR(100) NOT NULL")
     private String slug;
-    @Column(name="moTa",columnDefinition = "TEXT NOT NULL")
+    @Column(name="moTa",columnDefinition = "TEXT")
     private String moTa;
     @Column(name="for_accessary", columnDefinition = "TINYINT(1)")
     private Boolean forAccessary;
@@ -39,7 +39,7 @@ public class TheLoai extends BaseEntity{
     private TheLoai parent;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
-    private List<TheLoai> children;
+    private List<TheLoai> children = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(name = "theloai_khuyenmai",
@@ -54,5 +54,11 @@ public class TheLoai extends BaseEntity{
         this.slug = theLoai.getSlug();
         this.parent = theLoai.getParent();
         this.children = theLoai.getChildren();
+    }
+    @PrePersist
+    public void prePersist() {
+        if (Objects.equals(this.tenLoai, "")) {
+           throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE, "category name cannot be empty");
+        }
     }
 }

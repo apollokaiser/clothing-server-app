@@ -1,11 +1,14 @@
 package com.stu.dissertation.clothingshop.Cache.CacheService.GioHang;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stu.dissertation.clothingshop.Cache.CacheService.BaseRedisService;
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
 import com.stu.dissertation.clothingshop.Enum.RedisKey;
 import com.stu.dissertation.clothingshop.Enum.RedisPrefix;
+import com.stu.dissertation.clothingshop.Payload.Request.Cart;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class GioHangRedisServiceImpl implements GioHangRedisService{
     private final BaseRedisService redisService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper redistObjectMapper;
 
     @Value("${application.redis.time-to-live.cart}")
     private long cartTTL;
@@ -29,21 +33,24 @@ public class GioHangRedisServiceImpl implements GioHangRedisService{
     }
     @Override
     public void saveCart(String id, GioHangDTO gioHangDTO)  {
+        log.info("Saving cart {}", id);
         String key = RedisKey.CART.getKey() + id;
         redisService.hashSet(key, getFieldPrefix(gioHangDTO), gioHangDTO);
         redisService.setTimeToLive(key, getCartTTL());
     }
     private long getCartTTL() {
-        return Instant.now().plus( cartTTL, ChronoUnit.DAYS).getEpochSecond();
+        return cartTTL * 24 * 60 * 60;
     }
     @Override
     public void deleteCart(String id, GioHangDTO gioHangDTO) {
+        log.info("Deleting cart {}", id);
         String key = RedisKey.CART.getKey() + id;
         redisService.delete(key, getFieldPrefix(gioHangDTO));
     }
 
     @Override
     public void deleteCarts(String id, List<GioHangDTO> gioHangDTOs) {
+        log.info("begin delete carts");
         for(GioHangDTO dto : gioHangDTOs) {
             deleteCart(id, dto);
         }
@@ -68,12 +75,45 @@ public class GioHangRedisServiceImpl implements GioHangRedisService{
     }
 
     @Override
+    public void savePreOrder(String id, Cart cart) {
+        log.info(("Begin save pre order"));
+        try {
+        String cartJSON = redistObjectMapper.writeValueAsString(cart);
+        redisService.set(RedisKey.PRE_ORDER.getKey() + id, cartJSON);
+        redisService.setTimeToLive(RedisKey.PRE_ORDER.getKey() + id, 10L * 60);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public Cart getPreOrder(String id) {
+        log.info(("Begin get pre order"));
+        String key = RedisKey.PRE_ORDER.getKey() + id;
+        String cartJSON = (String) redisService.get(key);
+        if(cartJSON == null) return null;
+        try {
+            return redistObjectMapper.readValue(cartJSON, Cart.class);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public void clearPreOrder(String id) {
+        log.info(("Begin clear pre order"));
+        String key = RedisKey.PRE_ORDER.getKey() + id;
+        redisService.delete(key);
+    }
+
+    @Override
     public List<GioHangDTO> getCart(String id) {
         String key = RedisKey.CART.getKey() + id;
         List<Object> obj = redisService.hashGetByFieldPrefix(key, RedisPrefix.CART_PREFIX.getPrefix());
         List<GioHangDTO> carts = new ArrayList<>();
         for (Object item : obj) {
-            GioHangDTO gioHangDTO = objectMapper.convertValue(item, GioHangDTO.class);
+            GioHangDTO gioHangDTO = redistObjectMapper.convertValue(item, GioHangDTO.class);
             carts.add(gioHangDTO);
         }
         return carts;

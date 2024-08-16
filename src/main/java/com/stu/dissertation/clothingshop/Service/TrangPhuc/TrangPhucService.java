@@ -22,4 +22,8 @@ public interface TrangPhucService {
     ResponseMessage updateOutfit (UpdateTrangPhucDTO dto);
     ResponseMessage getAttentionOutfit(List<String> ids);
     ResponseMessage getLastestOutfit(Pageable pageable);
+    ResponseMessage unlockTrangPhuc(String id);
+
+    ResponseMessage lockOutfitSize(String size, String id);
+    ResponseMessage unlockOutfitSize(String size, String id);
 }

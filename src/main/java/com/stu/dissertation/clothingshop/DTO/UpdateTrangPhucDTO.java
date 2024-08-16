@@ -19,6 +19,7 @@ public class UpdateTrangPhucDTO {
     private BigDecimal giaTien;
     private String moTa;
     private Long theLoai;
+    private boolean tinhTrang;
     private boolean hasPiece;
     private List<String> hinhAnhs;
     private List<UpdateTrangPhucDTO> manhTrangPhucs;

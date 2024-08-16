@@ -54,6 +54,15 @@ spring:
             token-uri: "https://oauth2.googleapis.com/token"
             user-info-uri: "https://www.googleapis.com/oauth2/v3/"
             user-name-attribute: sub
+  payment:
+    vnPay:
+      url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      tmnCode: FLR26POS
+      secretKey: PDPLZOBR0AUZHJ5VIV6CP3LW225ZB4T8
+      returnUrl: http://localhost:8080/api/payment/vn-pay-callback
+      version: 2.1.0
+      command: pay
+      orderType: other
 
 application:
   security:
@@ -72,6 +81,7 @@ application:
       session: 30 #days
       cart: 30 #days
       categories: 30 #days
+      order: 10 #minutes
 
   
   #spring oauth2 client configuration

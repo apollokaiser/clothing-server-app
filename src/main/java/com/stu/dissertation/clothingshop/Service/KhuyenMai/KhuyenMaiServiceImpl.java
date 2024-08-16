@@ -63,6 +63,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
         KhuyenMai thisPromotion = khuyenMaiRepository.save(khuyenMai);
         Long thisTime = thisPromotion.getNgayBatDau();
         promotion.ids().forEach(id-> khuyenMaiRepository.addPromotion(thisPromotion.getMaKhuyenMai(), id, thisTime));
+        khuyenMaiRedisService.clearCategoryPromotions();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Save promotion successfully")
@@ -84,6 +85,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
         khuyenMaiRepository.delete(khuyenMai);
         theLoais.forEach(theLoai -> theLoai.getKhuyenMais().remove(khuyenMai));
             theLoaiRepository.saveAllAndFlush(theLoais);
+        khuyenMaiRedisService.clearCategoryPromotions();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Delete promotion successfully")
@@ -109,6 +111,7 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
     @Transactional
     @PreAuthorize("hasRole('ADMIN') and hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL')")
     public ResponseMessage updatePromotion(AddpromotionRequest promotion) {
+        khuyenMaiRedisService.clearCategoryPromotions();
         KhuyenMai khuyenMai = khuyenMaiMapper.convert(promotion.khuyenMai());
         if(khuyenMai.getMaKhuyenMai()==null) {
             throw new ApplicationException(BusinessErrorCode.NOT_FOUND);
@@ -117,25 +120,31 @@ public class KhuyenMaiServiceImpl implements KhuyenMaiService{
                 .orElseThrow(()->new ApplicationException(BusinessErrorCode.NOT_FOUND));
         List<Long> ids = entity.getTheLoais().stream().map(TheLoai::getMaLoai).toList();
         List<TheLoai> theLoais = theLoaiRepository.findAllById(ids);
+        if(!promotion.deleteIds().isEmpty()) {
+            theLoais.forEach(theLoai ->{
+               if(promotion.deleteIds().contains(theLoai.getMaLoai()))
+                    theLoai.getKhuyenMais().remove(entity);
+                    entity.getTheLoais().remove(theLoai);
+            });
+            theLoaiRepository.saveAll(theLoais);
+        }
+        //thêm các thể loại mới
         if(!promotion.ids().isEmpty()) {
-            theLoais.forEach((theLoai ->{
-                entity.getTheLoais().remove(theLoai);
-                theLoai.getKhuyenMais().remove(entity);
-            }));
             updateField(entity, khuyenMai);
            KhuyenMai savedPromotion =  khuyenMaiRepository.save(entity);
-            theLoaiRepository.saveAll(theLoais);
-            promotion.ids().forEach(id -> khuyenMaiRepository.addPromotion(savedPromotion.getMaKhuyenMai(), id, savedPromotion.getNgayBatDau()));
+           promotion.ids().forEach(id -> khuyenMaiRepository.addPromotion(savedPromotion.getMaKhuyenMai(), id, savedPromotion.getNgayBatDau()));
         }
         updateField(entity, khuyenMai);
        khuyenMaiRepository.save(entity);
+        khuyenMaiRedisService.clearCategoryPromotions();
        return ResponseMessage.builder()
                .status(OK)
-               .message("update successfully")
+               .message("update promotion successfully")
                .build();
     }
 
     @Override
+    @Transactional
     public ResponseMessage getCategoryInPromotion(Long id) {
         KhuyenMai khuyenMai = khuyenMaiRepository.findById(id)
                 .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND));

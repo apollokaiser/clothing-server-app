@@ -26,6 +26,7 @@ public interface DonThueMapper {
     @Mapping(target = "trangThai", ignore = true)
     @Mapping(target="maDonThue", ignore = true)
     @Mapping(target = "ngayThue", ignore = true)
+    @Mapping(target = "theChan", ignore = true)
     @Mapping(target="ngayNhan", source = "ngayNhan", qualifiedByName = "getLongDate")
     DonThue convert(DonThueDTO donThue);
 

@@ -35,5 +35,4 @@ public class DatCoc {
     @MapsId
     @JoinColumn(name="ma_don_thue")
     private DonThue donThue;
-
 }

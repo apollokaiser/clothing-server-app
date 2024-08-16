@@ -49,10 +49,6 @@ public class AuthController {
        ResponseMessage response = nguoiDungService.resetPassword(request);
        return new ResponseEntity<>(response,headers,OK);
     }
-    @PostMapping("/logout")
-    public ResponseEntity<ResponseMessage> logout(@RequestBody String token){
-        return null;
-    }
     @GetMapping("/refresh")
     public ResponseEntity<ResponseMessage> refreshToken(@RequestParam("token") String token) {
         ResponseMessage response = nguoiDungService.refreshToken(token);

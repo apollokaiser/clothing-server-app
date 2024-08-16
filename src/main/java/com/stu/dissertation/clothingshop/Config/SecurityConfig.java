@@ -54,13 +54,15 @@ public class SecurityConfig {
     @NonFinal
     private final String[] PUBLIC_ENDPOINT = {
             "/auth/**",
-            "/danh-muc/**",
+            "/danh-muc/public/**",
             "/trang-phuc/public/**",
             "/khuyen-mai/danh-sach-khuyen-mai-thanh-toan",
             "/khuyen-mai/check-code",
             "/khuyen-mai/get-promotions",
             "/thanh-toan/thanh-toan-tien-loi",
-            "khuyen-mai/danh-sach-khuyen-mai-danh-muc"
+            "khuyen-mai/danh-sach-khuyen-mai-danh-muc",
+            "/payment/vn-pay-callback",
+            "/ws/**"
     };
     @NonFinal
     @Bean
@@ -71,9 +73,11 @@ public class SecurityConfig {
         http.authorizeHttpRequests(req ->
                         req.requestMatchers(PUBLIC_ENDPOINT).permitAll()
                                 .requestMatchers( "/user/**").hasRole("USER")
+                                .requestMatchers(HttpMethod.POST,"/payment/dat-coc-don-thue").hasRole("USER")
                                 .requestMatchers("/gio-hang/**").hasRole("USER")
                                 .requestMatchers("/thanh-toan/thanh-toan-khach-hang").hasRole("USER")
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .requestMatchers("/danh-muc/update/**").hasRole("ADMIN")
                                 .anyRequest()
                                 .authenticated()
                         )
@@ -105,8 +109,9 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of( "http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTION"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

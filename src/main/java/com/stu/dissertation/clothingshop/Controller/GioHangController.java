@@ -45,24 +45,29 @@ public class GioHangController {
         ResponseMessage response =  gioHangService.getCarts(id);
         return new ResponseEntity<>(response, headers, OK);
     }
-    @DeleteMapping("/v2/xoa-gio-hang")
+    @PostMapping("/v2/xoa-gio-hang")
     @ResponseStatus(OK)
-    public void deleteCart( @RequestBody GioHangDTO cart) throws ParseException {
+    public void deleteCart(@RequestBody @Valid GioHangDTO cart) throws ParseException {
         gioHangService.deleteCart(cart);
     }
-    @PutMapping("/v2/cap-nhat-gio-hang")
+    @PostMapping("/v2/cap-nhat-gio-hang")
     @ResponseStatus(OK)
-    public void updateCart( @RequestBody GioHangDTO cart) throws ParseException {
+    public void updateCart(@RequestBody GioHangDTO cart) throws ParseException {
         gioHangService.updateCart(cart);
     }
-    @PutMapping("/v2/cap-nhat-trang-phuc-khac")
+    @PostMapping("/v2/cap-nhat-trang-phuc-khac")
     @ResponseStatus(OK)
     public void updateCart(@RequestBody UpdateCart cart) throws ParseException {
         gioHangService.updateCart(cart.oldItem(), cart.newItem());
     }
     @PostMapping("/v2/prepared-order")
     @ResponseStatus(value=ACCEPTED, reason = "No unexpected ! Next step can continue")
-    public void preparedOrder(@RequestBody @Valid Cart cart) {
+    public void preparedOrder(@RequestBody @Valid Cart cart) throws ParseException {
         gioHangService.prepareOrder(cart);
+    }
+    @GetMapping("/v2/cancel-prepared-order")
+    @ResponseStatus(value=ACCEPTED, reason = "No unexpected ! Next step can continue")
+    public void cancelPreparedOrder() throws ParseException {
+        gioHangService.cancelPreparedOrder();
     }
 }

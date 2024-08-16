@@ -15,4 +15,8 @@ public interface DonThueRepository extends JpaRepository<DonThue, String> {
     List<DonThue> getDonThue(int status, Pageable pageable);
     @Query("SELECT COUNT(dt) FROM DonThue dt WHERE dt.trangThai.maTrangThai=?1")
     int getOrdersCount(int status);
+    @Query("SELECT dt FROM DonThue dt " +
+            "WHERE LOWER(CONCAT(dt.maDonThue, ' ',dt.tongThue,' ', dt.tenNguoiNhan,' ',  dt.sdtNguoiNhan, ' ', dt.diaChiNguoiNhan)) " +
+            "LIKE %?1% ORDER BY dt.ngayThue DESC")
+    List<DonThue> searchOrder(String keyword);
 }

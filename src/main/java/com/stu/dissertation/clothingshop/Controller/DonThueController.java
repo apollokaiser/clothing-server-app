@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/don-thue")
 @PreAuthorize("hasRole('ADMIN') and " +
@@ -22,39 +24,66 @@ import org.springframework.web.bind.annotation.*;
 public class DonThueController {
     private final DonThueService donThueService;
     private final HttpHeaders headers;
+
     @GetMapping("/unconfirm-order-count")
-    public ResponseEntity<ResponseMessage> unconfirmOrderCount(){  // 200 OK: success, 401 Unauthorized: not authorized, 500 Internal Server Error: error in server
+    public ResponseEntity<ResponseMessage> unconfirmOrderCount() {  // 200 OK: success, 401 Unauthorized: not authorized, 500 Internal Server Error: error in server
         ResponseMessage response = donThueService.unconfirmOrderCount();
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+
     @GetMapping("/get-don-thue")
     public ResponseEntity<ResponseMessage> getDonThue(
-            @RequestParam(value="status") int status,
-            @RequestParam(value="page", defaultValue = "1") int page,
-            @RequestParam(value="size", defaultValue = "10") int size) {
+            @RequestParam(value = "status") int status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         ResponseMessage response = donThueService.getOrders(pageable, status);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+
     @GetMapping("change-status")
     public ResponseEntity<?> changeStatus(@RequestParam("id") String id,
-                                        @RequestParam("status") Long status){
+                                          @RequestParam("status") Long status) {
         ResponseMessage response = donThueService.changeStatus(id, status);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+
     @GetMapping("/chi-tiet-don-thue")
-    public ResponseEntity<?> getDonThueById(@RequestParam("id") String id){
+    public ResponseEntity<?> getDonThueById(@RequestParam("id") String id) {
         ResponseMessage response = donThueService.getOrderDetail(id);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+    @GetMapping("/tim-kiem-don-thue")
+    public ResponseEntity<?> searchDonThue(@RequestParam("keyword") String keyword) {
+        ResponseMessage response = donThueService.searchOrders(keyword);
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
+    @GetMapping("/change-date")
+    public ResponseEntity<?> changeDate(@RequestParam("date") Long date,
+                                          @RequestParam("id") String id) {
+        ResponseMessage response = donThueService.changeDate(date, id);
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
+
     @PostMapping("/dat-coc")
-    public ResponseEntity<?> datCoc(@RequestBody @Valid DatCocRequest datCoc){
+    public ResponseEntity<?> datCoc(@RequestBody @Valid DatCocRequest datCoc) {
         ResponseMessage response = donThueService.addDeposit(datCoc);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+
     @PostMapping("/xuat-phieu-hoan-tra")
-    public ResponseEntity<?> printReturnBill(@RequestBody @Valid PhieuHoanTraDTO phieuHoanTra){
+    public ResponseEntity<?> printReturnBill(@RequestBody @Valid PhieuHoanTraDTO phieuHoanTra) {
         ResponseMessage response = donThueService.printReturnBill(phieuHoanTra);
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
+    @GetMapping("/update-the-chan")
+    public ResponseEntity<?> updateTheChan(@RequestParam("id") String id, @RequestParam long theChan) {
+        ResponseMessage response = donThueService.updateTheChan(id, theChan);
+        return new ResponseEntity<>(response, headers, HttpStatus.OK);
+    }
+    @GetMapping("/update-ngay-nhan")
+    public ResponseEntity<?> updateNgayNhan(@RequestParam("id") String id, @RequestParam long datetime) {
+        ResponseMessage response = donThueService.updateNgayNhan(id, datetime);
         return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.OK;
@@ -67,7 +68,7 @@ public class NguoiDungController {
     }
     @GetMapping("/dang-xuat")
     @ResponseStatus(value = OK, reason = "logout successfully")
-    public void logout(@RequestParam("token") String accessToken) {
+    public void logout(@RequestParam("token") String accessToken) throws ParseException {
         nguoiDungService.logout(accessToken);
     }
 }

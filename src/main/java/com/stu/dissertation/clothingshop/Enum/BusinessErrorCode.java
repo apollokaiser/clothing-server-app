@@ -38,7 +38,8 @@ public enum BusinessErrorCode {
   CANNOT_DELETE_WITH_REFERENCE(5010, "Cannot delete entity with reference"),
   DUPLICATE_DATA(5011, "Duplicate data"),
   DATA_NOT_ENOUGH(5012, "Data not enough"),
-  NULL_DATA(5006, "Null data");
+  PROCESSING_ERROR(5013, "Processing error"),
+  NULL_DATA(5006, "Null data"), INVALID_DATE( 5014,"Date value not allow" );
   private int code;
   private String message;
 

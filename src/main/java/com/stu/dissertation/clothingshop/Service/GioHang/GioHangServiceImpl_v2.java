@@ -10,6 +10,7 @@ import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Payload.Request.Cart;
+import com.stu.dissertation.clothingshop.Payload.Request.OrderRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.DonThueRepository;
 import com.stu.dissertation.clothingshop.Repositories.KichThuocTrangPhucRepository;
@@ -18,6 +19,7 @@ import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
 import com.stu.dissertation.clothingshop.Service.DonThue.DonThueService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +37,7 @@ import static org.springframework.http.HttpStatus.OK;
 @Service
 @RequiredArgsConstructor
 @Primary
+@Slf4j
 public class GioHangServiceImpl_v2 implements GioHangService {
     private final TrangPhucDAO trangPhucDAO;
     private final GioHangRedisService gioHangRedisService;
@@ -52,6 +56,8 @@ public class GioHangServiceImpl_v2 implements GioHangService {
         if (cartItems == null) {
             throw new ApplicationException(BusinessErrorCode.NOT_FOUND);
         }
+        //Lấy luôn cả prepare order
+        Cart orders = gioHangRedisService.getPreOrder(id);
         List<String> ids = cartItems.stream().map(GioHangDTO::getParentId).toList();
         List<OutfitCartDTO> cartDetails = trangPhucDAO.getTrangPhucInCart(ids);
         return ResponseMessage.builder()
@@ -60,6 +66,7 @@ public class GioHangServiceImpl_v2 implements GioHangService {
                 .data(new HashMap<>() {{
                     put("cart_items", cartItems);
                     put("cart_details", cartDetails);
+                    put("prepare_cart", orders);
                 }})
                 .build();
     }
@@ -89,15 +96,17 @@ public class GioHangServiceImpl_v2 implements GioHangService {
     }
     @Override
     @Transactional
-    public void prepareOrder(Cart cart) {
-        List<TrangPhuc_KichThuocKey> ids = cart.carts().stream().map(item -> new TrangPhuc_KichThuocKey(item.getId(), item.getSize())).toList();
+    public void prepareOrder(Cart cart) throws ParseException {
+        log.info("preparing order: {}", new Date());
+        gioHangScheduler.restoreOutfit(getUID());
+        List<TrangPhuc_KichThuocKey> ids = cart.getCarts().stream().map(item -> new TrangPhuc_KichThuocKey(item.getId(), item.getSize())).toList();
         List< KichThuoc_TrangPhuc > trangPhucs = kichThuocTrangPhucRepository.findAllById(ids);
         for (KichThuoc_TrangPhuc trangPhuc : trangPhucs) {
             if(trangPhuc.getSoLuong() == 0 || !trangPhuc.getTrangThai()) {
                 throw new ApplicationException(BusinessErrorCode.DATA_NOT_ENOUGH, "TrangPhuc is not enough to order");
             }
             TrangPhuc_KichThuocKey key = trangPhuc.getId();
-            Optional<GioHangDTO> gioHang = cart.carts().stream()
+            Optional<GioHangDTO> gioHang = cart.getCarts().stream()
                     .filter(item-> item.getId().equals(key.getMaTrangPhuc()) && item.getSize().equals(key.getMaKichThuoc()))
                     .findFirst();
             if (gioHang.isPresent()) {
@@ -109,5 +118,16 @@ public class GioHangServiceImpl_v2 implements GioHangService {
         }
         kichThuocTrangPhucRepository.saveAll(trangPhucs);
         gioHangScheduler.scheduleOutfitRestoration(cart);
+    }
+    @Override
+   public void cancelPreparedOrder() throws ParseException {
+        log.info("cancel order: {}", new Date());
+    gioHangScheduler.restoreOutfit(getUID());
+    }
+    private String getUID () throws ParseException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        JwtAuthenticationToken oauthToken = (JwtAuthenticationToken) authentication;
+        String jwt = oauthToken.getToken().getTokenValue();
+        return jwtService.extractUID(jwt);
     }
 }

@@ -1,8 +1,6 @@
 package com.stu.dissertation.clothingshop.Mapper;
 
-import com.stu.dissertation.clothingshop.DTO.KhuyenMaiDTO;
-import com.stu.dissertation.clothingshop.DTO.TheLoaiDTO;
-import com.stu.dissertation.clothingshop.DTO.TheLoaiPromotionDTO;
+import com.stu.dissertation.clothingshop.DTO.*;
 import com.stu.dissertation.clothingshop.Entities.KhuyenMai;
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
 import org.mapstruct.Mapper;
@@ -19,10 +17,10 @@ public interface TheLoaiMapper {
     TheLoaiMapper INSTANCE = Mappers.getMapper(TheLoaiMapper.class);
 
     @Mapping(target="children", source="children", qualifiedByName = "mapChildren")
+    @Mapping(target="parentId", source="parent", qualifiedByName = "mapParent")
     TheLoaiDTO convert(TheLoai theLoai);
     @Mapping(target = "khuyenMai", source = "khuyenMais", qualifiedByName = "getKhuyenMai")
     TheLoaiPromotionDTO convertToGetPromotion(TheLoai theLoai);
-
     @Named("getKhuyenMai")
         default KhuyenMaiDTO getKhuyenMai(Set<KhuyenMai> khuyenMai) {
             return khuyenMai.stream()
@@ -32,8 +30,13 @@ public interface TheLoaiMapper {
         }
     @Named("mapChildren")
     default List<TheLoaiDTO> mapChildren(List<TheLoai> children){
-        if(children.isEmpty()) return null;
+        if( children == null || children.isEmpty()) return null;
         return children.stream()
                 .map(this::convert).collect(Collectors.toList());
+    }
+    @Named("mapParent")
+    default Long mapParent(TheLoai parent) {
+        if(parent==null) return null;
+        return parent.getMaLoai();
     }
 }

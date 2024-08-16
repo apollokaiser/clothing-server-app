@@ -2,6 +2,7 @@ package com.stu.dissertation.clothingshop.Repositories;
 
 import com.stu.dissertation.clothingshop.Entities.TheLoai;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -12,4 +13,7 @@ public interface TheLoaiRepository extends JpaRepository<TheLoai, Long> {
     List<TheLoai> getTheLoaiHasPromotions(long currentTime);
     @Query(value = "SELECT tl FROM TheLoai tl WHERE tl.parent.maLoai = ?1")
     List<TheLoai> findByParentId(Long category);
+    @Modifying
+    @Query("DELETE FROM TheLoai tl WHERE tl.parent.maLoai = ?1")
+    void deleteByParentId( Long parentId);
 }

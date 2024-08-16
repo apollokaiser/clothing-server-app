@@ -32,6 +32,7 @@ public class TheLoaiRedisServiceImpl implements TheLoaiRedisService{
            return objectMapper.readValue(categories, new TypeReference<>() {
            });
        } catch (Exception e) {
+           System.out.println("Category cache error: " + e.getMessage());
           return null;
        }
     }
@@ -42,9 +43,9 @@ public class TheLoaiRedisServiceImpl implements TheLoaiRedisService{
         try {
             String theLoaiJSON = objectMapper.writeValueAsString(theLoai);
             baseService.set(RedisKey.CATEGORY.getKey(), theLoaiJSON);
-            baseService.setTimeToLive(RedisKey.CATEGORY.getKey(), cartTTL);
+            baseService.setTimeToLive(RedisKey.CATEGORY.getKey(), cartTTL * 24 * 60 * 60);
         } catch (Exception e) {
-            throw new ApplicationException(BusinessErrorCode.NOT_FOUND);
+            System.out.println("Not found your data");
         }
     }
 

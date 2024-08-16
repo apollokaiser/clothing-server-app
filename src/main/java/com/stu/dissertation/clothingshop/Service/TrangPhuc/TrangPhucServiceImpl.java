@@ -11,6 +11,7 @@ import com.stu.dissertation.clothingshop.Mapper.TrangPhucMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.KichThuocRepository;
+import com.stu.dissertation.clothingshop.Repositories.KichThuocTrangPhucRepository;
 import com.stu.dissertation.clothingshop.Repositories.TheLoaiRepository;
 import com.stu.dissertation.clothingshop.Repositories.TrangPhucRepository;
 import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.ManagerRequired;
@@ -36,6 +37,7 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     private final KichThuocRepository kichThuocRepository;
     private final TrangPhucRepository trangPhucRepository;
     private final TheLoaiRepository theLoaiRepository;
+    private final KichThuocTrangPhucRepository kichThuocTrangPhucRepository;
 
     @Override
     @Transactional
@@ -449,6 +451,45 @@ public class TrangPhucServiceImpl implements TrangPhucService {
                 .data(new HashMap<>() {{
                     put("lastest_outfit", trangPhucDTOS);
                 }})
+                .build();
+    }
+
+    @Override
+    public ResponseMessage unlockTrangPhuc(String id) {
+        TrangPhuc trangPhuc = trangPhucRepository.findById(id)
+                .orElseThrow(()-> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        trangPhuc.setTinhTrang(true);
+        trangPhucRepository.save(trangPhuc);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Unlock outfits successfully")
+                .build();
+    }
+
+    @Override
+    @Transactional
+    @ManagerRequired
+    public ResponseMessage lockOutfitSize(String size, String id) {
+        TrangPhuc_KichThuocKey key = new TrangPhuc_KichThuocKey(id,size);
+        KichThuoc_TrangPhuc outfitSize = kichThuocTrangPhucRepository.findById(key)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        outfitSize.setTrangThai(false);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Lock outfits size successfully")
+                .build();
+    }
+    @Override
+    @Transactional
+    @ManagerRequired
+    public ResponseMessage unlockOutfitSize(String size, String id) {
+        TrangPhuc_KichThuocKey key = new TrangPhuc_KichThuocKey(id,size);
+        KichThuoc_TrangPhuc outfitSize = kichThuocTrangPhucRepository.findById(key)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        outfitSize.setTrangThai(true);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Lock outfits size successfully")
                 .build();
     }
 

@@ -2,6 +2,7 @@ package com.stu.dissertation.clothingshop.Service.NguoiDung;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.stu.dissertation.clothingshop.Cache.CacheService.GioHang.GioHangRedisService;
 import com.stu.dissertation.clothingshop.Cache.CacheService.InvalidToken.InvalidTokenRedisService;
 import com.stu.dissertation.clothingshop.DAO.NguoiDung.NguoiDungDAO;
 import com.stu.dissertation.clothingshop.DTO.NguoiDungDetailDTO;
@@ -16,6 +17,7 @@ import com.stu.dissertation.clothingshop.Repositories.DiaChiRepository;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.GoogleIdentityService;
+import com.stu.dissertation.clothingshop.Service.GioHang.GioHangService;
 import com.stu.dissertation.clothingshop.Service.RefreshToken.RefreshTokenService;
 import com.stu.dissertation.clothingshop.Service.UserToken.UserTokenService;
 import com.stu.dissertation.clothingshop.Utils.RandomCodeGenerator;
@@ -30,8 +32,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.*;
 
@@ -50,6 +54,7 @@ public class NguoiDungService {
     private final DiaChiRepository diaChiRepository;
     private final NguoiDungRepository nguoiDungRepository;
     private final InvalidTokenRedisService invalidTokenRedisService;
+    private final GioHangRedisService gioHangRedisService;
 
     public ResponseMessage activateAccount(String token) {
         try {
@@ -340,8 +345,14 @@ public class NguoiDungService {
                .message("Update address successfully")
                .build();
     }
-
-    public void logout(String accessToken) {
+    private String getUID () throws ParseException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        JwtAuthenticationToken oauthToken = (JwtAuthenticationToken) authentication;
+        String jwt = oauthToken.getToken().getTokenValue();
+        return jwtService.extractUID(jwt);
+    }
+    public void logout(String accessToken) throws ParseException {
+        gioHangRedisService.clearPreOrder(getUID());
         JWTClaimsSet jwt = jwtService.verifiedToken(accessToken);
          String jwtID = jwt.getJWTID();
          Long jwtExp = jwt.getExpirationTime().getTime();

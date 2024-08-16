@@ -83,6 +83,21 @@ public class TrangPhucController {
         ResponseMessage response = trangPhucService.lockTrangPhuc(request.ids());
         return new ResponseEntity<>(response,headers, OK);
     }
+    @GetMapping("/ngung-cho-thue-kich-thuoc")
+    public ResponseEntity<?> lockTrangPhucSize(@RequestParam("size") String size, @RequestParam("id") String id){
+        ResponseMessage response = trangPhucService.lockOutfitSize(size,id);
+        return new ResponseEntity<>(response,headers, OK);
+    }
+    @GetMapping("/mo-khoa-kich-thuoc")
+    public ResponseEntity<?> unlockTrangPhucSize(@RequestParam("size") String size, @RequestParam("id") String id){
+        ResponseMessage response = trangPhucService.unlockOutfitSize(size,id);
+        return new ResponseEntity<>(response,headers, OK);
+    }
+    @GetMapping("/mo-khoa-trang-phuc")
+    public ResponseEntity<?> unlockTrangPhuc(@RequestParam("id") String id){
+        ResponseMessage response = trangPhucService.unlockTrangPhuc(id);
+        return new ResponseEntity<>(response,headers, OK);
+    }
     @PostMapping("/xoa-trang-phuc")
     public ResponseEntity<?> deleteTrangPhuc(@RequestBody DeleteOutfit request) {
         ResponseMessage response = trangPhucService.deleteTrangPhuc(request.ids());

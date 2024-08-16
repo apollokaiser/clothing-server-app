@@ -33,7 +33,11 @@ public interface GioHangService {
        System.out.println("METHOD DEFAULT: ");
    }
 
-    default void prepareOrder(Cart cart) {
+    default void prepareOrder(Cart cart) throws ParseException {
 
+    }
+
+    default void cancelPreparedOrder() throws ParseException {
+        System.out.println("METHOD DEFAULT: ");
     }
 }
