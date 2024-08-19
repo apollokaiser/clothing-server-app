@@ -84,7 +84,7 @@ public class UserTokenServiceImpl implements UserTokenService {
                     .build();
         }
         int result = userTokenRepository.activateUserByToken(token, Instant.now().getEpochSecond());
-        if(result==0) throw new ApplicationException(BusinessErrorCode.ACTIVATION_ACCOUNT_FAILED);
+        if(result== 0) throw new ApplicationException(BusinessErrorCode.ACTIVATION_ACCOUNT_FAILED);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Your account has been activated successfully")

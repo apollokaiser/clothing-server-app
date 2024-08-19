@@ -10,14 +10,16 @@ import com.stu.dissertation.clothingshop.Entities.*;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Enum.LoginType;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
-import com.stu.dissertation.clothingshop.Payload.Request.*;
+import com.stu.dissertation.clothingshop.Payload.Request.AddressRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.RePasswordRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.UpdateUserRequest;
+import com.stu.dissertation.clothingshop.Payload.Request.UserCredentialsRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Payload.Response.UserInfo;
 import com.stu.dissertation.clothingshop.Repositories.DiaChiRepository;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.GoogleIdentityService;
-import com.stu.dissertation.clothingshop.Service.GioHang.GioHangService;
 import com.stu.dissertation.clothingshop.Service.RefreshToken.RefreshTokenService;
 import com.stu.dissertation.clothingshop.Service.UserToken.UserTokenService;
 import com.stu.dissertation.clothingshop.Utils.RandomCodeGenerator;
@@ -37,7 +39,10 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.OK;
 
@@ -183,7 +188,7 @@ public class NguoiDungService {
     }
 
     @Transactional
-    private ResponseMessage signupWithGoogle(UserInfo userInfo) {
+    public ResponseMessage signupWithGoogle(UserInfo userInfo) {
         // tạo người dùng
         NguoiDung userEntity = NguoiDung.builder()
                 .id(userInfo.id())
