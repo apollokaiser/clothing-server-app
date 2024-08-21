@@ -1,6 +1,6 @@
 package com.stu.dissertation.clothingshop.Service.NguoiDung;
 
-import com.stu.dissertation.clothingshop.DAO.NguoiDung.NguoiDungDAO;
+import com.stu.dissertation.clothingshop.Cache.CacheService.Token.TokenRedisService;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Entities.UserToken;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
@@ -10,6 +10,7 @@ import com.stu.dissertation.clothingshop.Payload.Request.UserCredentialsRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Service.EmailService.EmailService;
+import com.stu.dissertation.clothingshop.Utils.UIDCreator;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,12 +32,9 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class RegisterService {
     private final NguoiDungRepository nguoiDungRepository;
-    private final NguoiDungDAO nguoiDungDAO;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    @NonFinal
-    @Value("${application.security.verification_expired}")
-    private Long verificationExpired;
+    private final TokenRedisService tokenRedisService;
 
     @Transactional
     public ResponseMessage register(UserCredentialsRequest request) {
@@ -44,9 +42,10 @@ public class RegisterService {
       Optional<NguoiDung> user =  nguoiDungRepository.findByEmail(request.getEmail());
       if(user.isPresent()) throw new ApplicationException(BusinessErrorCode.USER_ALREADY_EXIST);
       String encodePassword = passwordEncoder.encode(request.getPassword());
+      String uid = UIDCreator.createUserCode();
         //save user credentials
         NguoiDung nguoiDung = NguoiDung.builder()
-                .id(UUID.randomUUID().toString())
+                .id(uid)
                 .email(request.getEmail())
                 .tenNguoiDung(request.getName())
                 .matKhau(encodePassword)
@@ -54,16 +53,8 @@ public class RegisterService {
                 .khachMoi(false)
                 .build();
         String verificationToken = UUID.randomUUID().toString();
-        UserToken userToken = UserToken.builder()
-                .token(verificationToken)
-                .expiresAt(Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).toEpochMilli())
-                .nguoiDung(nguoiDung)
-                .build();
-        HashSet<UserToken> tokens = new HashSet<>(){{
-            add(userToken);
-        }};
-        nguoiDung.setUserTokens(tokens);
-       nguoiDungDAO.save(nguoiDung);
+       nguoiDungRepository.save(nguoiDung);
+        tokenRedisService.saveUserToken(uid, verificationToken);
         //send email
         try {
         sendVerificationEmail(request.getEmail(), verificationToken);

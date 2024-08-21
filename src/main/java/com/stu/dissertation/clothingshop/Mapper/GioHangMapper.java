@@ -5,7 +5,7 @@ import com.stu.dissertation.clothingshop.Entities.NguoiDung_GioHang;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.Set;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface GioHangMapper {
@@ -14,4 +14,6 @@ public interface GioHangMapper {
     @Mapping(target="size", source = "outfitSize.kichThuoc.id")
     @Mapping(target="parentId", source = "trangPhucChinh.id")
     GioHangDTO convert(NguoiDung_GioHang gioHang);
+
+    List<GioHangDTO> convert(List<NguoiDung_GioHang> gioHangs);
 }

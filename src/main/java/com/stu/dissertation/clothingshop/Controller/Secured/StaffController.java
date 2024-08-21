@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.Payload.Request.AdminInfo;
 import com.stu.dissertation.clothingshop.Payload.Request.ChangeRoleRequest;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping(value = "/admin/staff")
+@RequestMapping(value = "/secured/staff")
 @RequiredArgsConstructor
 public class StaffController {
     private final StaffService staffService;

@@ -19,23 +19,20 @@ import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.AdminRequi
 import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.HighestRequired;
 import com.stu.dissertation.clothingshop.Security.AuthorizeAnnotation.ManagerRequired;
 import com.stu.dissertation.clothingshop.Service.EmailService.EmailService;
-import com.stu.dissertation.clothingshop.Utils.AdminCreator;
+import com.stu.dissertation.clothingshop.Utils.UIDCreator;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,10 +62,10 @@ public class StaffServiceImpl implements StaffService {
     public ResponseMessage addStaff(AdminInfo info) throws MessagingException {
         Optional<NguoiDung> nguoiDung = nguoiDungRepository.findByEmail(info.email());
         if(nguoiDung.isPresent()) throw new ApplicationException(BusinessErrorCode.USER_ALREADY_EXIST);
-        String rawPassword =  AdminCreator.createAdminPassword();
+        String rawPassword =  UIDCreator.createAdminPassword();
         String pasword = passwordEncoder.encode(rawPassword);
-        String adminEmail = AdminCreator.createAdminEmail(info.email(), adminEmailsuffix);
-        String id = AdminCreator.createAdminCode(info.role());
+        String adminEmail = UIDCreator.createAdminEmail(info.email(), adminEmailsuffix);
+        String id = UIDCreator.createAdminCode(info.role());
         NguoiDung admin = NguoiDung.builder()
                 .khachMoi(false)
                 .enabled(true)

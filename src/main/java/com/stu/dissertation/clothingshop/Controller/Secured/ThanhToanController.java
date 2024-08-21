@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.Payload.Request.OrderRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
@@ -24,6 +24,7 @@ public class ThanhToanController {
         ResponseMessage response = donThueService.saveOrder(orderDetail);
             return new ResponseEntity<>(response, headers, HttpStatus.OK);
     }
+    @Deprecated(since = "14/08/2024")
     @PostMapping(value="/thanh-toan-tien-loi")
     public ResponseEntity<?> paymentWithInterest(
             @RequestBody @Valid OrderRequest orderDetail,

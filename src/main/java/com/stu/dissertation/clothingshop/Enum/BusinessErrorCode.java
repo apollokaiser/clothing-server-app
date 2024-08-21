@@ -40,8 +40,8 @@ public enum BusinessErrorCode {
   DATA_NOT_ENOUGH(5012, "Data not enough"),
   PROCESSING_ERROR(5013, "Processing error"),
   NULL_DATA(5006, "Null data"), INVALID_DATE( 5014,"Date value not allow" );
-  private int code;
-  private String message;
+  private final int code;
+  private final String message;
 
   BusinessErrorCode(int code, String message) {
       this.code = code;

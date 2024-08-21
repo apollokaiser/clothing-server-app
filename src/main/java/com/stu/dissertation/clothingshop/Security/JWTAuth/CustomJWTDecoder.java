@@ -1,5 +1,6 @@
 package com.stu.dissertation.clothingshop.Security.JWTAuth;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -13,6 +14,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Objects;
 
 @Component
+@Slf4j
 public class CustomJWTDecoder implements JwtDecoder {
     @Value("${application.security.jwt.secret}")
     private String secretKey;
@@ -22,6 +24,7 @@ public class CustomJWTDecoder implements JwtDecoder {
 
     @Override
     public Jwt decode(String token) throws JwtException{
+        log.info("This CustomJWTDecoder is running");
         if(!jwtService.isNonExpiredToken(token))
             throw new JwtException("Token expired");
         if(Objects.isNull(jwtDecoder)){

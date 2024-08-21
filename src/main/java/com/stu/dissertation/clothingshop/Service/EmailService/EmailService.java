@@ -6,13 +6,13 @@ import jakarta.mail.MessagingException;
 public interface EmailService {
     void sendActivationAccount(
             String to,
-            String subject,
             String activationCode,
+            String subject,
             EmailTemplateEngine emailTemplateEngine) throws MessagingException;
     void sendResetPasswordCode(
             String to,
-            String subject,
             String resetPasswordCode,
+            String subject,
             EmailTemplateEngine emailTemplateEngine) throws MessagingException;
     void sendAdminInfo(
             String to,

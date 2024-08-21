@@ -3,13 +3,13 @@ package com.stu.dissertation.clothingshop.Service.NguoiDung;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.stu.dissertation.clothingshop.Cache.CacheService.GioHang.GioHangRedisService;
-import com.stu.dissertation.clothingshop.Cache.CacheService.InvalidToken.InvalidTokenRedisService;
-import com.stu.dissertation.clothingshop.DAO.NguoiDung.NguoiDungDAO;
+import com.stu.dissertation.clothingshop.Cache.CacheService.Token.TokenRedisService;
 import com.stu.dissertation.clothingshop.DTO.NguoiDungDetailDTO;
 import com.stu.dissertation.clothingshop.Entities.*;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Enum.LoginType;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Mapper.NguoiDungMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.AddressRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.RePasswordRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.UpdateUserRequest;
@@ -19,9 +19,9 @@ import com.stu.dissertation.clothingshop.Payload.Response.UserInfo;
 import com.stu.dissertation.clothingshop.Repositories.DiaChiRepository;
 import com.stu.dissertation.clothingshop.Repositories.NguoiDungRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
+import com.stu.dissertation.clothingshop.Service.EmailService.EmailService;
 import com.stu.dissertation.clothingshop.Service.ExternalIdentity.GoogleIdentityService;
 import com.stu.dissertation.clothingshop.Service.RefreshToken.RefreshTokenService;
-import com.stu.dissertation.clothingshop.Service.UserToken.UserTokenService;
 import com.stu.dissertation.clothingshop.Utils.RandomCodeGenerator;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,10 +39,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.springframework.http.HttpStatus.OK;
 
@@ -50,23 +47,32 @@ import static org.springframework.http.HttpStatus.OK;
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class NguoiDungService {
     private final JWTService jwtService;
-    private final NguoiDungDAO nguoiDungDAO;
-    private final UserTokenService userTokenService;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService;
     private final GoogleIdentityService googleIdentityService;
     private final PasswordEncoder passwordEncoder;
     private final DiaChiRepository diaChiRepository;
     private final NguoiDungRepository nguoiDungRepository;
-    private final InvalidTokenRedisService invalidTokenRedisService;
+    private final TokenRedisService tokenRedisService;
     private final GioHangRedisService gioHangRedisService;
+    private final NguoiDungMapper nguoiDungMapper;
+    private final EmailService emailService;
 
-    public ResponseMessage activateAccount(String token) {
-        try {
-            return userTokenService.validateUserToken(token);
-        } catch (MessagingException e) {
-            throw new ApplicationException((BusinessErrorCode.ERROR_MAIL));
+    @Transactional
+    public ResponseMessage activateAccount(String email, String token) {
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        validateUser(nguoiDung);
+        if (tokenRedisService.checkUserToken(nguoiDung.getId(), token)) {
+            String newToken = UUID.randomUUID().toString();
+            return handleExpiredToken(nguoiDung, newToken, false);
         }
+        nguoiDung.setEnabled(true);
+        nguoiDungRepository.save(nguoiDung);
+        return ResponseMessage.builder()
+                .status(HttpStatus.OK)
+                .message("active successfully")
+                .build();
     }
 
     @Transactional
@@ -95,6 +101,7 @@ public class NguoiDungService {
             throw new ApplicationException(BusinessErrorCode.ACCESS_TOKEN_ERROR, "Error generating token");
         }
     }
+
     @Transactional
     public ResponseMessage refreshToken(String token) {
         RefreshToken refresh_token = refreshTokenService.findByToken(token)
@@ -117,28 +124,28 @@ public class NguoiDungService {
         }
     }
 
+    @Transactional
     public ResponseMessage getUserInfo(String uid) {
-        NguoiDungDetailDTO user = nguoiDungDAO.findUserById(uid);
+        NguoiDung user = nguoiDungRepository.findById(uid)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        NguoiDungDetailDTO detail = nguoiDungMapper.convert(user);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get user info successfully")
                 .data(new HashMap<>() {{
-                    put("user_info", user);
+                    put("user_info", detail);
                 }})
                 .build();
     }
 
+    @Transactional
     public ResponseMessage resetPassword(String email) throws MessagingException {
-        NguoiDung nguoiDung = nguoiDungDAO.findNguoiDungByEmail(email)
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
                 .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
-        if(nguoiDung.getMatKhau() == null)
-            throw new ApplicationException(BusinessErrorCode.USER_NOT_FOUND);
+        validateUser(nguoiDung);
         String token = RandomCodeGenerator.generateRandomCode(7);
-        UserToken userToken = UserToken.builder()
-                .token(token)
-                .nguoiDung(nguoiDung)
-                .build();
-        userTokenService.saveUserToken(userToken);
+        sendResetCode(email, token);
+        tokenRedisService.saveUserToken(nguoiDung.getId(), token);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Your request was successfully")
@@ -147,10 +154,17 @@ public class NguoiDungService {
 
     @Transactional
     public ResponseMessage resetPassword(RePasswordRequest request) {
-        UserToken userToken = userTokenService.findByToken(request.getResetCode());
-        NguoiDung nguoiDung = userToken.getNguoiDung();
-        nguoiDungDAO.resetPassword(nguoiDung.getEmail(), request.getNewPassword());
-        userTokenService.validateResetPasswordToken(request.getResetCode());
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        validateUser(nguoiDung);
+        if (tokenRedisService.checkUserToken(nguoiDung.getId(), request.getResetCode())) {
+            String newCode = RandomCodeGenerator.generateRandomCode(7);
+            handleExpiredToken(nguoiDung, newCode, true);
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), nguoiDung.getMatKhau()))
+            throw new ApplicationException(BusinessErrorCode.NO_CHANGE_APPLY, "Cannot set a same with old pasword");
+        nguoiDung.setMatKhau(passwordEncoder.encode(request.getNewPassword()));
+        nguoiDungRepository.save(nguoiDung);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Reset password successfully")
@@ -206,7 +220,7 @@ public class NguoiDungService {
         userEntity.setTaiKhoan(taiKhoanLienKet);
         userEntity.setLastLogin(Instant.now().getEpochSecond());
         //lưu người dùng và tài khoản
-        NguoiDung nguoiDung = nguoiDungDAO.save(userEntity);
+        NguoiDung nguoiDung = nguoiDungRepository.save(userEntity);
         //tạo refresh token
         RefreshToken refreshToken = refreshTokenService.handle(nguoiDung, null);
         try {
@@ -231,82 +245,84 @@ public class NguoiDungService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
-               .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
         if (!passwordEncoder.matches(request.getOldPassword(), nguoiDung.getMatKhau())) {
             throw new ApplicationException(BusinessErrorCode.WRONG_PASSWORD);
         }
-        if(passwordEncoder.matches(request.getNewPassword(), nguoiDung.getPassword())) {
+        if (passwordEncoder.matches(request.getNewPassword(), nguoiDung.getPassword())) {
             throw new ApplicationException(BusinessErrorCode.NO_CHANGE_APPLY);
         }
         nguoiDung.setMatKhau(passwordEncoder.encode(request.getNewPassword()));
         nguoiDungRepository.save(nguoiDung);
         return ResponseMessage.builder()
-               .status(OK)
-               .message("Change password successfully")
-               .build();
+                .status(OK)
+                .message("Change password successfully")
+                .build();
     }
+
     @Transactional
     public ResponseMessage changeInfo(UpdateUserRequest update, HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        if(!Objects.equals(email, update.getEmail())) {
+        if (!Objects.equals(email, update.getEmail())) {
             throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
         }
-        NguoiDung nguoiDung =nguoiDungRepository.findByEmail(email)
-               .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
-        if(update.getName()!=null && !update.getName().isEmpty())
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.USER_NOT_FOUND));
+        if (update.getName() != null && !update.getName().isEmpty())
             nguoiDung.setTenNguoiDung(update.getName());
-        if(update.getPhone()!=null && !update.getPhone().isEmpty()) {
+        if (update.getPhone() != null && !update.getPhone().isEmpty()) {
             nguoiDung.setSdt(update.getPhone());
         }
-      NguoiDung user =  nguoiDungRepository.save(nguoiDung);
+        NguoiDung user = nguoiDungRepository.save(nguoiDung);
         String jwtHeader = request.getHeader("Authorization").substring(7);
         // lưu invalid token vào redis
         JWTClaimsSet jwt = jwtService.verifiedToken(jwtHeader);
-        invalidTokenRedisService.addToken(jwt.getJWTID(), jwt.getExpirationTime().getTime());
+        tokenRedisService.saveInvalidToken(jwt.getJWTID(), jwt.getExpirationTime().getTime());
         try {
             String accessToken = jwtService.generateToken(user);
-        return ResponseMessage.builder()
-               .status(OK)
-               .message("Change info successfully")
-                .data(new HashMap<>(){{
-                    put("access_token", accessToken);
-                }})
-               .build();
+            return ResponseMessage.builder()
+                    .status(OK)
+                    .message("Change info successfully")
+                    .data(new HashMap<>() {{
+                        put("access_token", accessToken);
+                    }})
+                    .build();
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
     }
+
     @Transactional
     public ResponseMessage addAddress(AddressRequest address) {
-     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-     String email = auth.getName();
-     NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
-             .orElseThrow(()-> new ApplicationException((BusinessErrorCode.USER_NOT_FOUND)));
-     DiaChi diaChi = DiaChi.builder()
-             .nguoiDung(nguoiDung)
-             .tenDiaChi(address.name())
-             .diaChi(address.address())
-             .isDefault(address.isDefault())
-             .build();
-     AddressDetail detail = AddressDetail.builder()
-             .wardId(address.wardId())
-             .districtId(address.districtId())
-             .provinceId(address.provinceId())
-             .diaChi(diaChi)
-             .build();
-     diaChi.setDetail(detail);
-     if(address.isDefault()) {
-         diaChiRepository.resetDefaultAddress(nguoiDung.getId());
-     }
-     DiaChi saveAddress  = diaChiRepository.save(diaChi);
-     return ResponseMessage.builder()
-             .status(OK)
-             .message("Add address successfully")
-             .data(new HashMap<>(){{
-                 put("address", saveAddress);
-             }})
-             .build();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        NguoiDung nguoiDung = nguoiDungRepository.findByEmail(email)
+                .orElseThrow(() -> new ApplicationException((BusinessErrorCode.USER_NOT_FOUND)));
+        DiaChi diaChi = DiaChi.builder()
+                .nguoiDung(nguoiDung)
+                .tenDiaChi(address.name())
+                .diaChi(address.address())
+                .isDefault(address.isDefault())
+                .build();
+        AddressDetail detail = AddressDetail.builder()
+                .wardId(address.wardId())
+                .districtId(address.districtId())
+                .provinceId(address.provinceId())
+                .diaChi(diaChi)
+                .build();
+        diaChi.setDetail(detail);
+        if (address.isDefault()) {
+            diaChiRepository.resetDefaultAddress(nguoiDung.getId());
+        }
+        DiaChi saveAddress = diaChiRepository.save(diaChi);
+        return ResponseMessage.builder()
+                .status(OK)
+                .message("Add address successfully")
+                .data(new HashMap<>() {{
+                    put("address", saveAddress);
+                }})
+                .build();
     }
 
     public ResponseMessage deleteAddress(Long id) {
@@ -320,47 +336,86 @@ public class NguoiDungService {
     @Transactional
     public ResponseMessage updateAddress(AddressRequest address, boolean updateDefault) {
         DiaChi diaChi = diaChiRepository.findById(address.id())
-               .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         diaChi.setTenDiaChi(address.name());
         diaChi.setDiaChi(address.address());
         //có sự thay đổi về địa chỉ mặc định
-        if(!diaChi.getIsDefault() && address.isDefault()) {
+        if (!diaChi.getIsDefault() && address.isDefault()) {
             diaChiRepository.resetDefaultAddress(diaChi.getNguoiDung().getId());
-        } if(diaChi.getIsDefault() && !address.isDefault()){
+        }
+        if (diaChi.getIsDefault() && !address.isDefault()) {
             diaChi.setIsDefault(false);
         }
-        if(!updateDefault){
-        diaChi.getDetail().setProvinceId(address.provinceId());
-        diaChi.getDetail().setDistrictId(address.districtId());
-        diaChi.getDetail().setWardId(address.wardId());
+        if (!updateDefault) {
+            diaChi.getDetail().setProvinceId(address.provinceId());
+            diaChi.getDetail().setDistrictId(address.districtId());
+            diaChi.getDetail().setWardId(address.wardId());
         }
         diaChiRepository.save(diaChi);
         return ResponseMessage.builder()
-               .status(OK)
-               .message("Update address successfully")
-               .build();
+                .status(OK)
+                .message("Update address successfully")
+                .build();
     }
+
     public ResponseMessage updateAdress(Long id, boolean setDefault) {
         DiaChi diaChi = diaChiRepository.findById(id)
-               .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
+                .orElseThrow(() -> new ApplicationException(BusinessErrorCode.NOT_FOUND));
         diaChi.setIsDefault(setDefault);
         diaChiRepository.save(diaChi);
         return ResponseMessage.builder()
-               .status(OK)
-               .message("Update address successfully")
-               .build();
+                .status(OK)
+                .message("Update address successfully")
+                .build();
     }
-    private String getUID () throws ParseException {
+
+
+    public void logout(String accessToken) throws ParseException {
+        gioHangRedisService.clearPreOrder(getUID());
+        JWTClaimsSet jwt = jwtService.verifiedToken(accessToken);
+        String jwtID = jwt.getJWTID();
+        Long jwtExp = jwt.getExpirationTime().getTime();
+        tokenRedisService.saveInvalidToken(jwtID, jwtExp);
+    }
+
+    private String getUID() throws ParseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         JwtAuthenticationToken oauthToken = (JwtAuthenticationToken) authentication;
         String jwt = oauthToken.getToken().getTokenValue();
         return jwtService.extractUID(jwt);
     }
-    public void logout(String accessToken) throws ParseException {
-        gioHangRedisService.clearPreOrder(getUID());
-        JWTClaimsSet jwt = jwtService.verifiedToken(accessToken);
-         String jwtID = jwt.getJWTID();
-         Long jwtExp = jwt.getExpirationTime().getTime();
-        invalidTokenRedisService.addToken(jwtID,jwtExp);
+
+    private void validateUser(NguoiDung user) {
+        if (user.getEnabled()) {
+            throw new ApplicationException(BusinessErrorCode.USER_ACTIVATED);
+        }
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
+        }
+    }
+
+    private ResponseMessage handleExpiredToken(NguoiDung user, String code, boolean resetPassword) {
+        try {
+            if (resetPassword) {
+                emailService.sendResetPasswordCode(user.getEmail(), code, null, null);
+            } else {
+                emailService.sendActivationAccount(user.getEmail(), code, null, null);
+            }
+        } catch (MessagingException e) {
+            throw new ApplicationException(BusinessErrorCode.ERROR_MAIL);
+        }
+        tokenRedisService.saveUserToken(user.getId(), code);
+        return ResponseMessage.builder()
+                .status(HttpStatus.ACCEPTED)
+                .message("Token has expired ! Check new token in your mail")
+                .build();
+    }
+
+    private void sendResetCode(String email, String code) {
+        try {
+            emailService.sendResetPasswordCode(email, code, null, null);
+        } catch (MessagingException e) {
+            throw new ApplicationException(BusinessErrorCode.ERROR_MAIL);
+        }
     }
 }

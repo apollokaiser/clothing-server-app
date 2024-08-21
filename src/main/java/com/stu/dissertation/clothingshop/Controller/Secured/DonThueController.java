@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.DTO.PhieuHoanTraDTO;
 import com.stu.dissertation.clothingshop.Payload.Request.DatCocRequest;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("/don-thue")
+@RequestMapping("/secured/don-thue")
 @PreAuthorize("hasRole('ADMIN') and " +
         "hasAnyAuthority('SUPER_ACCOUNT','FULL_CONTROL')")
 @RequiredArgsConstructor

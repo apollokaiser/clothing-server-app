@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Order(1)
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter {
     @Autowired
     private JWTService jwtService;
@@ -33,6 +34,7 @@ public class JWTFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain chain) throws ServletException, IOException {
+       log.info("This JWTFilter running");
         if (isPublicEndpoint(request.getRequestURI())) {
             HttpServletRequestWrapper wrapper = new HttpServletRequestWrapper(request) {
                 @Override

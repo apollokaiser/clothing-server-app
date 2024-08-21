@@ -11,8 +11,9 @@ public enum RedisKey {
     PRODUCT("product:"),
     SESIONS("session:"),
     CATEGORY_PROMOTION("promotion:category:"),
-    INVALID_TOKEN("invalid_token"),
-    CATEGORY("category:"), PRE_ORDER("pre_order:"),;
+    INVALID_TOKEN("invalid_token:"),
+    USER_TOKEN("user_token:"),
+    CATEGORY("category:"), PRE_ORDER("pre_order:");
     private final String key;
     RedisKey(String key){
         this.key = key;

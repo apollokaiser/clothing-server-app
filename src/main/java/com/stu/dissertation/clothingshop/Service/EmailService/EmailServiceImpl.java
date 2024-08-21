@@ -25,7 +25,10 @@ public class EmailServiceImpl implements EmailService{
     private final SpringTemplateEngine templateEngine;
     @Override
     @Async
-    public void sendActivationAccount(String to, String subject, String activationCode, EmailTemplateEngine emailTemplateEngine) throws MessagingException {
+    public void sendActivationAccount(String to, String activationCode, String subject, EmailTemplateEngine emailTemplateEngine) throws MessagingException {
+        if(subject == null) {
+            subject = "CONFIRM ACCOUNT";
+        }
         String template = emailTemplateEngine == null ? "activation_account" : emailTemplateEngine.getName();
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(
@@ -34,7 +37,7 @@ public class EmailServiceImpl implements EmailService{
                 StandardCharsets.UTF_8.name()
         );
         Map<String, Object> props = new HashMap<>();
-        String link = String.format("http://localhost:5173/auth/confirm?token=%s", activationCode);
+        String link = String.format("http://localhost:5173/auth/confirm?email=%s&token=%s",to, activationCode);
         props.put("link", link);
         props.put("to", to);
         Context context = new Context();
@@ -48,7 +51,7 @@ public class EmailServiceImpl implements EmailService{
 
     @Override
     @Async
-    public void sendResetPasswordCode(String to, String subject, String resetPasswordCode, EmailTemplateEngine emailTemplateEngine) throws MessagingException {
+    public void sendResetPasswordCode(String to, String resetPasswordCode, String subject, EmailTemplateEngine emailTemplateEngine) throws MessagingException {
         String template = emailTemplateEngine.getName() ==null ? "reset_password" : emailTemplateEngine.getName();
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(

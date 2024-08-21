@@ -1,13 +1,16 @@
 package com.stu.dissertation.clothingshop.Service.TrangPhuc;
 
-import com.stu.dissertation.clothingshop.DAO.TrangPhuc.TrangPhucDAO;
-import com.stu.dissertation.clothingshop.DTO.*;
-import com.stu.dissertation.clothingshop.Entities.*;
+import com.stu.dissertation.clothingshop.DTO.OutfitCartDTO;
+import com.stu.dissertation.clothingshop.DTO.TrangPhucDTO;
+import com.stu.dissertation.clothingshop.DTO.TrangPhucDetailDTO;
+import com.stu.dissertation.clothingshop.DTO.UpdateTrangPhucDTO;
 import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
+import com.stu.dissertation.clothingshop.Entities.*;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Enum.SIZE;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
 import com.stu.dissertation.clothingshop.Mapper.TrangPhucMapper;
+import com.stu.dissertation.clothingshop.Mapper.TrangphucDetailMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
 import com.stu.dissertation.clothingshop.Repositories.KichThuocRepository;
@@ -32,8 +35,8 @@ import static org.springframework.http.HttpStatus.OK;
 @Service
 @RequiredArgsConstructor
 public class TrangPhucServiceImpl implements TrangPhucService {
-    private final TrangPhucDAO trangPhucDAO;
     private final TrangPhucMapper trangPhucMapper;
+    private final TrangphucDetailMapper trangPhucDetailMapper;
     private final KichThuocRepository kichThuocRepository;
     private final TrangPhucRepository trangPhucRepository;
     private final TheLoaiRepository theLoaiRepository;
@@ -78,12 +81,14 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     @Override
     @Transactional
     public ResponseMessage getTrangPhucDetails(String id) {
-        TrangPhucDetailDTO trangPhuc = trangPhucDAO.getTrangPhucDetails(id);
+        TrangPhuc trangPhuc = trangPhucRepository.findById(id)
+                .orElseThrow(()->new ApplicationException(BusinessErrorCode.NOT_FOUND));
+        TrangPhucDetailDTO trangPhucDetailDTO = trangPhucDetailMapper.convert(trangPhuc);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get data successfully")
                 .data(new HashMap<>() {{
-                    put("trangPhuc", trangPhuc);
+                    put("trangPhuc", trangPhucDetailDTO);
                 }})
                 .build();
     }
@@ -91,12 +96,15 @@ public class TrangPhucServiceImpl implements TrangPhucService {
     @Override
     @Transactional
     public ResponseMessage getTrangPhucInCart(List<String> ids) {
-        List<OutfitCartDTO> trangPhucs = trangPhucDAO.getTrangPhucInCart(ids);
+        List<TrangPhuc> trangPhucs = trangPhucRepository.getTrangPhucByIds(ids);
+        List<OutfitCartDTO> trangPhucDtos = trangPhucs.stream()
+                .map(trangPhucDetailMapper::convertToCartItem)
+                .toList();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get cart detail data successfully")
                 .data(new HashMap<>() {{
-                    put("cart_details", trangPhucs);
+                    put("cart_details", trangPhucDtos);
                 }})
                 .build();
     }
@@ -130,22 +138,6 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         outfit.setTheLoai(theLoai);
         outfit.setTinhTrang(true);
         List<KichThuoc> kichThuocEntity = kichThuocRepository.findAll();
-        // tạm thời phong ấn coi có lỗi gì không ! Có thì lấy lại
-//        List<String> size = dto.getKichThuocs().stream()
-//                .map(KichThuocTrangPhucDTO::getMaKichThuoc).toList();
-//        // tạo 1 set KichThuoc_TrangPhuc cho outfit cần thêm
-//        Set<KichThuoc_TrangPhuc> outfitSize = kichThuocEntity.stream().map(kichThuoc -> {
-//            KichThuocTrangPhucDTO dtoSize = dto.getKichThuocs().stream()
-//                    .filter(item -> Objects.equals(item.getMaKichThuoc(), kichThuoc.getId())).findFirst().get();
-//            return KichThuoc_TrangPhuc.builder()
-//                    .id(new TrangPhuc_KichThuocKey(kichThuoc.getId(), outfit.getId()))
-//                    .trangPhuc(outfit)
-//                    .kichThuoc(kichThuoc)
-//                    .soLuong(dtoSize.getSoLuong())
-//                    .build();
-//        }).collect(Collectors.toSet());
-//        outfit.setKichThuocTrangPhucs(outfitSize);
-        // xem hàm setOutfitSize() bên dưới
         outfit.setKichThuocTrangPhucs(setOutfitSize(dto, outfit, kichThuocEntity));
         if (dto.isHasPiece() && dto.getManhTrangPhucs().isEmpty()) {
             throw new ApplicationException(BusinessErrorCode.NOT_ALLOW_DATA_SOURCE);
@@ -168,7 +160,6 @@ public class TrangPhucServiceImpl implements TrangPhucService {
                 .build();
     }
 
-    @Transactional
     private Set<KichThuoc_TrangPhuc> setOutfitSize(
             UpdateTrangPhucDTO dto,
             TrangPhuc outfit,
@@ -192,7 +183,6 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         }).collect(Collectors.toSet());
     }
 
-    @Transactional
     private void updateOutfitSize(
             UpdateTrangPhucDTO dto,
             TrangPhuc outfit,
@@ -248,7 +238,6 @@ public class TrangPhucServiceImpl implements TrangPhucService {
         return "TP" + prefix + theLoai + String.format("%05d", currentTimeSeconds % 100000);
     }
 
-    @Transactional
     private void deleteOutfitSize(List<String> kichThuocs, TrangPhuc outfit) {
         kichThuocs.forEach(size -> {
             outfit.getKichThuocTrangPhucs().stream()

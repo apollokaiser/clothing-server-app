@@ -24,6 +24,7 @@ import static org.springframework.http.HttpStatus.OK;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Lazy})
+@Deprecated
 public class UserTokenServiceImpl implements UserTokenService {
     private final UserTokenRepository userTokenRepository;
     private final EmailService emailService;
@@ -44,7 +45,7 @@ public class UserTokenServiceImpl implements UserTokenService {
     @Override
     @Transactional
     public void saveUserToken(UserToken user_token) throws MessagingException {
-        Long exp = Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).toEpochMilli() /1000;
+        Long exp = Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).getEpochSecond();
         user_token.setExpiresAt(exp);
         String subject = "RESET PASSWORD";
         EmailTemplateEngine emailTemplate = EmailTemplateEngine.RESET_PASSWORD;
@@ -69,7 +70,7 @@ public class UserTokenServiceImpl implements UserTokenService {
             EmailTemplateEngine viewEngine = EmailTemplateEngine.ACTIVATION_ACCOUNT;
             String subject = "CONFIRM ACCOUNT";
             String verificationToken = UUID.randomUUID().toString();
-            Long exp = Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).toEpochMilli() /1000;
+            Long exp = Instant.now().plus(verificationExpired, ChronoUnit.MINUTES).getEpochSecond();
             UserToken entity = UserToken.builder()
                     .nguoiDung(user_token.getNguoiDung())
                     .token(verificationToken)
@@ -84,7 +85,7 @@ public class UserTokenServiceImpl implements UserTokenService {
                     .build();
         }
         int result = userTokenRepository.activateUserByToken(token, Instant.now().getEpochSecond());
-        if(result== 0) throw new ApplicationException(BusinessErrorCode.ACTIVATION_ACCOUNT_FAILED);
+        if(result == 0) throw new ApplicationException(BusinessErrorCode.ACTIVATION_ACCOUNT_FAILED);
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Your account has been activated successfully")

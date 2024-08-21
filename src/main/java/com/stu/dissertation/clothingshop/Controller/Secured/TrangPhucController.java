@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.DTO.UpdateTrangPhucDTO;
 import com.stu.dissertation.clothingshop.Payload.Request.CartID;
@@ -22,57 +22,12 @@ import static org.springframework.http.HttpStatus.OK;
 
 
 @RestController
-@RequestMapping("/trang-phuc")
+@RequestMapping("/secured/trang-phuc")
 @RequiredArgsConstructor
 public class TrangPhucController {
     private final HttpHeaders headers;
     private final TrangPhucService trangPhucService;
 
-    @PostMapping("/public/get-init")
-    public ResponseEntity<?> getInit(@RequestBody(required = false) @Valid CartID attention) {
-        Pageable pageable = PageRequest.of(0,12);
-        ResponseMessage response = trangPhucService.getInit(pageable, attention);
-        return new ResponseEntity<>(response, headers, OK);
-    }
-    @GetMapping(value = "public/danh-sach")
-    public ResponseEntity<?> getDSTrangPhuc(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        Pageable pageable = PageRequest.of(page, size);
-        ResponseMessage response = trangPhucService.getTrangPhuc(pageable);
-        return new ResponseEntity<>(response, headers, OK);
-    }
-    @PostMapping(value="public/get-attention-outfit")
-    public ResponseEntity<?> getAttentionOutfit(@RequestBody @Valid CartID attention) {
-        ResponseMessage response = trangPhucService.getAttentionOutfit(attention.ids());
-        return new ResponseEntity<>(response, headers, OK);
-    }
-    @GetMapping(value="public/get-lastest-outfit")
-    public ResponseEntity<?> getLastestOutfit(@RequestParam(value="page", defaultValue = "0") int page,
-                                               @RequestParam(value="size", defaultValue = "10") int size){
-        Pageable pageable = PageRequest.of(page, size);
-        ResponseMessage response = trangPhucService.getLastestOutfit(pageable);
-        return new ResponseEntity<>(response,headers, OK);
-    }
-    @GetMapping(value="public/chi-tiet-trang-phuc/{id}")
-    public ResponseEntity<?> getTrangPhuc(@PathVariable(name="id") String id){
-        ResponseMessage response = trangPhucService.getTrangPhucDetails(id);
-        return new ResponseEntity<>(response,headers, OK);
-    }
-    @PostMapping("public/trang-phuc-gio-hang")
-    public ResponseEntity<?> getTrangPhucInCart(@RequestBody CartID cartId){
-        ResponseMessage response = trangPhucService.getTrangPhucInCart(cartId.ids());
-        return new ResponseEntity<>(response,headers, OK);
-    }
-    @GetMapping("public/tim-kiem")
-    public ResponseEntity<?> searchTrangPhuc(@RequestParam("keyword") String keyword,
-                                             @RequestParam(value="page", defaultValue = "0") int page,
-                                             @RequestParam(value = "size", defaultValue = "10") int size){
-        Pageable pageable = PageRequest.of(page, size);
-        ResponseMessage response = trangPhucService.searchTrangPhuc(keyword, pageable);
-        return new ResponseEntity<>(response,headers, OK);
-    }
     @PostMapping("/them-trang-phuc")
     public ResponseEntity<?> addTrangPhuc(@RequestBody @Valid UpdateTrangPhucDTO trangPhuc){
         ResponseMessage response = trangPhucService.addTrangPhuc(trangPhuc);

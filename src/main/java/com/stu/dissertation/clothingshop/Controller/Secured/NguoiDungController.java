@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.Payload.Request.AddressRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.RePasswordRequest;
@@ -19,13 +19,13 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/my")
 @RequiredArgsConstructor
 public class NguoiDungController {
-
     private final NguoiDungService nguoiDungService;
     private final DonThueService donThueService;
     private final HttpHeaders headers;
+
     @GetMapping("/info")
     public ResponseEntity<ResponseMessage> info(@RequestParam("uid") String uid) {
        ResponseMessage response = nguoiDungService.getUserInfo(uid);

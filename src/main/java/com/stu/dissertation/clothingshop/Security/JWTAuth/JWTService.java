@@ -5,11 +5,10 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.stu.dissertation.clothingshop.Cache.CacheService.InvalidToken.InvalidTokenRedisService;
+import com.stu.dissertation.clothingshop.Cache.CacheService.Token.TokenRedisService;
 import com.stu.dissertation.clothingshop.Entities.NguoiDung;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
-import com.stu.dissertation.clothingshop.Repositories.InvalidTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,7 +27,7 @@ public class JWTService {
     private String secretKey;
     @Value("${application.security.jwt.expiration-token}")
     private long expiration;
-    private final InvalidTokenRedisService invalidTokenRedisService;
+    private final TokenRedisService tokenRedisService;
 
     public String generateToken(NguoiDung user) throws JOSEException {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
@@ -85,7 +84,7 @@ public class JWTService {
             SignedJWT signedJWT = SignedJWT.parse(token);
             var verified = signedJWT.verify(verifier);
 
-            if (invalidTokenRedisService.checkToken(signedJWT.getJWTClaimsSet().getJWTID()))
+            if (tokenRedisService.checkInvalidToken(signedJWT.getJWTClaimsSet().getJWTID()))
                 throw new ApplicationException(BusinessErrorCode.TOKEN_HAS_DESTROYED);
             return signedJWT.getJWTClaimsSet();
         } catch (JOSEException | ParseException | ApplicationException e) {

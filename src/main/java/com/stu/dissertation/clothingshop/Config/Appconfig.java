@@ -1,9 +1,5 @@
 package com.stu.dissertation.clothingshop.Config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.catalina.connector.Connector;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -50,10 +46,6 @@ public class Appconfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
-    }
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
     }
     @Bean
     public ScheduledExecutorService scheduledExecutorService() {

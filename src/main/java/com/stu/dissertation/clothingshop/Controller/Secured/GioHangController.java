@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Secured;
 
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
 import com.stu.dissertation.clothingshop.Payload.Request.Cart;
@@ -19,16 +19,17 @@ import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/gio-hang/")
+@RequestMapping("/my/gio-hang/")
 public class GioHangController {
     private final GioHangService gioHangService;
     private final HttpHeaders headers;
+    @Deprecated(since = "24/07/2024")
     @PostMapping("v1/luu-gio-hang")
     @ResponseStatus(OK)
     public void updateCart(@RequestBody UpDateCartRequest cart) {
         gioHangService.updateCarts(cart);
     }
-    @Deprecated
+    @Deprecated(since = "24/07/2024")
     @GetMapping("v1/danh-sach")
     public ResponseEntity<ResponseMessage> getCarts(@RequestParam("uid") String id){
         ResponseMessage response = gioHangService.getCarts(id);

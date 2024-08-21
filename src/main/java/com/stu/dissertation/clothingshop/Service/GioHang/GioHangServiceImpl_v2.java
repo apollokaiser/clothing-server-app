@@ -1,7 +1,6 @@
 package com.stu.dissertation.clothingshop.Service.GioHang;
 
 import com.stu.dissertation.clothingshop.Cache.CacheService.GioHang.GioHangRedisService;
-import com.stu.dissertation.clothingshop.DAO.TrangPhuc.TrangPhucDAO;
 import com.stu.dissertation.clothingshop.DTO.GioHangDTO;
 import com.stu.dissertation.clothingshop.DTO.OutfitCartDTO;
 import com.stu.dissertation.clothingshop.Entities.Embedded.TrangPhuc_KichThuocKey;
@@ -9,14 +8,12 @@ import com.stu.dissertation.clothingshop.Entities.KichThuoc_TrangPhuc;
 import com.stu.dissertation.clothingshop.Entities.TrangPhuc;
 import com.stu.dissertation.clothingshop.Enum.BusinessErrorCode;
 import com.stu.dissertation.clothingshop.Exception.CustomException.ApplicationException;
+import com.stu.dissertation.clothingshop.Mapper.TrangphucDetailMapper;
 import com.stu.dissertation.clothingshop.Payload.Request.Cart;
-import com.stu.dissertation.clothingshop.Payload.Request.OrderRequest;
 import com.stu.dissertation.clothingshop.Payload.Response.ResponseMessage;
-import com.stu.dissertation.clothingshop.Repositories.DonThueRepository;
 import com.stu.dissertation.clothingshop.Repositories.KichThuocTrangPhucRepository;
 import com.stu.dissertation.clothingshop.Repositories.TrangPhucRepository;
 import com.stu.dissertation.clothingshop.Security.JWTAuth.JWTService;
-import com.stu.dissertation.clothingshop.Service.DonThue.DonThueService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +36,11 @@ import static org.springframework.http.HttpStatus.OK;
 @Primary
 @Slf4j
 public class GioHangServiceImpl_v2 implements GioHangService {
-    private final TrangPhucDAO trangPhucDAO;
+    private final TrangphucDetailMapper trangphucDetailMapper;
+    private final TrangPhucRepository trangPhucRepository;
     private final GioHangRedisService gioHangRedisService;
     private final JWTService jwtService;
-    private  final KichThuocTrangPhucRepository kichThuocTrangPhucRepository;
+    private final KichThuocTrangPhucRepository kichThuocTrangPhucRepository;
     private final GioHangScheduler gioHangScheduler;
     private String getId() throws ParseException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -59,7 +57,10 @@ public class GioHangServiceImpl_v2 implements GioHangService {
         //Lấy luôn cả prepare order
         Cart orders = gioHangRedisService.getPreOrder(id);
         List<String> ids = cartItems.stream().map(GioHangDTO::getParentId).toList();
-        List<OutfitCartDTO> cartDetails = trangPhucDAO.getTrangPhucInCart(ids);
+        List<TrangPhuc> trangPhucs = trangPhucRepository.getTrangPhucByIds(ids);
+        List<OutfitCartDTO> cartDetails = trangPhucs.stream()
+                .map(trangphucDetailMapper::convertToCartItem)
+                .toList();
         return ResponseMessage.builder()
                 .status(OK)
                 .message("Get cart successfully")

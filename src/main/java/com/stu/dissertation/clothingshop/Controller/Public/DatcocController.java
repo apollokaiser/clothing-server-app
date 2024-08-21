@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Public;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.stu.dissertation.clothingshop.Payload.Request.OrderRequest;

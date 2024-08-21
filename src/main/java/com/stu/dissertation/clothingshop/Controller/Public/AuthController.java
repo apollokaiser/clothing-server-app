@@ -1,4 +1,4 @@
-package com.stu.dissertation.clothingshop.Controller;
+package com.stu.dissertation.clothingshop.Controller.Public;
 
 import com.stu.dissertation.clothingshop.Payload.Request.RePasswordRequest;
 import com.stu.dissertation.clothingshop.Payload.Request.UserCredentialsRequest;
@@ -35,8 +35,9 @@ public class AuthController {
         return new ResponseEntity<>(response, headers,OK);
     }
     @GetMapping("/validate")
-    public ResponseEntity<ResponseMessage> validateAccount(@RequestParam(value="token") String token){
-        ResponseMessage response = nguoiDungService.activateAccount(token);
+    public ResponseEntity<?> validateAccount(@RequestParam(value="token") String token,
+                                             @RequestParam(value="email") String email){
+        ResponseMessage response = nguoiDungService.activateAccount(email,token);
         return new ResponseEntity<>(response, headers, OK);
     }
     @GetMapping("/reset-password")
